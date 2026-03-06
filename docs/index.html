@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fauxdata — fake data, done right</title>
+<meta name="description" content="fauxdata is a CLI tool for generating and validating realistic fake datasets from YAML schemas. Locale-aware, pipeline-friendly, powered by pointblank.">
+<meta property="og:title" content="fauxdata — fake data, done right">
+<meta property="og:description" content="Generate and validate realistic fake datasets from YAML schemas. Because fake data can actually be better than real data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff41;
+    --green-dim: #00b32c;
+    --green-dark: #003d0d;
+    --amber: #ffb300;
+    --red: #ff3131;
+    --bg: #050a05;
+    --bg2: #0a110a;
+    --bg3: #0d160d;
+    --text: #c8ffc8;
+    --text-dim: #5a8a5a;
+    --border: #1a3a1a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px;
+    height: 20px;
+    background: var(--green);
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: difference;
+    animation: blink-cursor 1s step-end infinite;
+    transform: translate(-2px, -2px);
+  }
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* glow on text */
+  .glow { text-shadow: 0 0 8px var(--green), 0 0 20px rgba(0,255,65,0.3); }
+  .amber { color: var(--amber); }
+  .red { color: var(--red); }
+  .dim { color: var(--text-dim); }
+  .bright { color: var(--green); font-weight: 600; }
+
+  /* layout */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ─── HERO ─────────────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+  }
+
+  #hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  .ascii-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(7px, 1.5vw, 13px);
+    line-height: 1.2;
+    color: var(--green);
+    text-shadow: 0 0 10px rgba(0,255,65,0.5);
+    white-space: pre;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.8s ease both;
+  }
+
+  .tagline {
+    font-family: 'VT323', monospace;
+    font-size: clamp(28px, 5vw, 52px);
+    color: var(--green);
+    text-shadow: 0 0 15px rgba(0,255,65,0.6);
+    margin-bottom: 0.5rem;
+    animation: fadeInDown 0.8s ease 0.2s both;
+  }
+
+  .subtagline {
+    color: var(--text-dim);
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    animation: fadeInDown 0.8s ease 0.4s both;
+  }
+
+  .hero-prompt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    font-size: 15px;
+    animation: fadeInDown 0.8s ease 0.6s both;
+    position: relative;
+  }
+
+  .hero-prompt::before { content: '$ '; color: var(--green-dim); }
+
+  .prompt-text {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid var(--green);
+    animation: typing 2s steps(50) 1s both, blink 0.8s step-end 3s infinite;
+  }
+
+  @keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+  @keyframes blink {
+    0%, 100% { border-color: var(--green); }
+    50% { border-color: transparent; }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ─── SECTION ─────────────────────────────────────────── */
+  section {
+    padding: 5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-family: 'VT323', monospace;
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--green);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  p { color: var(--text); margin-bottom: 1rem; max-width: 680px; }
+
+  /* ─── TERMINAL WINDOW ─────────────────────────────────── */
+  .terminal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    margin: 2rem 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .terminal-bar {
+    background: var(--bg3);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+
+  .terminal-body {
+    padding: 1.5rem;
+    font-size: 13px;
+    line-height: 1.8;
+    min-height: 120px;
+  }
+
+  .t-line { display: block; }
+  .t-cmd::before { content: '$ '; color: var(--green-dim); }
+  .t-out { color: var(--text-dim); padding-left: 1rem; }
+  .t-pass { color: var(--green); }
+  .t-fail { color: var(--red); }
+  .t-warn { color: var(--amber); }
+  .t-section { color: var(--green); font-weight: 600; padding-top: 0.5rem; }
+
+  /* animated rows */
+  .anim-row { opacity: 0; }
+  .anim-row.visible { animation: row-in 0.3s ease forwards; }
+  @keyframes row-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ─── COMPARISON ─────────────────────────────────────── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    background: var(--bg2);
+  }
+
+  .compare-card.bad { border-color: rgba(255,49,49,0.3); }
+  .compare-card.good { border-color: rgba(0,255,65,0.3); }
+
+  .compare-card h3 {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    margin-bottom: 1rem;
+  }
+
+  .compare-card.bad h3 { color: var(--red); }
+  .compare-card.good h3 { color: var(--green); }
+
+  .check-list { list-style: none; }
+  .check-list li { padding: 0.25rem 0; font-size: 13px; display: flex; gap: 0.5rem; }
+  .check-list li::before { flex-shrink: 0; }
+  .check-list.fails li::before { content: '✗'; color: var(--red); }
+  .check-list.passes li::before { content: '✓'; color: var(--green); }
+
+  /* ─── SCHEMA ─────────────────────────────────────────── */
+  .code-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    padding: 1.5rem;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 1.5rem 0;
+  }
+
+  .yaml-key { color: var(--amber); }
+  .yaml-val { color: var(--green); }
+  .yaml-comment { color: var(--text-dim); font-style: italic; }
+  .yaml-type { color: #7ec8e3; }
+
+  /* ─── INSTALL ─────────────────────────────────────────── */
+  .install-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tab {
+    padding: 0.5rem 1.25rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    border-bottom: none;
+  }
+
+  .tab.active { color: var(--green); background: var(--bg3); border-color: var(--green-dim); border-bottom: 1px solid var(--bg3); }
+
+  .tab-panel {
+    display: none;
+    background: var(--bg3);
+    border: 1px solid var(--green-dim);
+    padding: 1.5rem;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .tab-panel.active { display: block; }
+
+  .install-cmd {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .install-cmd:last-child { border-bottom: none; }
+  .install-cmd .prompt { color: var(--green-dim); flex-shrink: 0; user-select: none; }
+  .install-cmd code { color: var(--text); flex: 1; }
+  .install-cmd .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .install-cmd .copy-btn:hover { border-color: var(--green); color: var(--green); }
+  .install-cmd .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  /* ─── FEATURES GRID ───────────────────────────────────── */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .feature {
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    background: var(--bg2);
+    transition: border-color 0.2s;
+  }
+
+  .feature:hover { border-color: var(--green-dim); }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .feature h3 {
+    color: var(--green);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature p { font-size: 12px; color: var(--text-dim); max-width: none; }
+
+  /* ─── COMMANDS TABLE ──────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    background: var(--bg3);
+    color: var(--text-dim);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 11px;
+    border-bottom: 1px solid var(--green-dim);
+  }
+
+  td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td:first-child { color: var(--green); white-space: nowrap; }
+  td:last-child { color: var(--text-dim); font-size: 12px; }
+
+  tr:hover td { background: var(--bg2); }
+
+  /* ─── FOOTER ─────────────────────────────────────────── */
+  footer {
+    padding: 3rem 0;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  footer a { color: var(--green-dim); text-decoration: none; }
+  footer a:hover { color: var(--green); text-decoration: underline; }
+
+  .footer-ascii {
+    font-size: 10px;
+    line-height: 1.2;
+    color: var(--green-dark);
+    margin: 1.5rem auto;
+    white-space: pre;
+    display: inline-block;
+  }
+
+  /* ─── BADGES ─────────────────────────────────────────── */
+  .badges { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1.5rem 0; }
+  .badge {
+    font-size: 11px;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge.green { border-color: var(--green-dim); color: var(--green); }
+  .badge.amber { border-color: rgba(255,179,0,0.4); color: var(--amber); }
+  .badge.blue { border-color: rgba(126,200,227,0.4); color: #7ec8e3; }
+
+  /* ─── NAV ─────────────────────────────────────────────── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(5, 10, 5, 0.92);
+    backdrop-filter: blur(4px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-logo {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: var(--green);
+    letter-spacing: 0.1em;
+  }
+
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--green); }
+
+  .nav-gh {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--green) !important;
+    border: 1px solid var(--green-dim);
+    padding: 0.3rem 0.8rem;
+    font-size: 12px !important;
+    text-decoration: none;
+    transition: all 0.15s !important;
+  }
+  .nav-gh:hover { background: var(--green-dark) !important; }
+
+  /* noise grain */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* highlight */
+  mark {
+    background: none;
+    color: var(--amber);
+    font-style: italic;
+  }
+
+  .big-number {
+    font-family: 'VT323', monospace;
+    font-size: clamp(60px, 10vw, 120px);
+    color: var(--green);
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(0,255,65,0.3);
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<nav>
+  <span class="nav-logo">fauxdata</span>
+  <div class="nav-links">
+    <a href="#why">why</a>
+    <a href="#how">how</a>
+    <a href="#schema">schema</a>
+    <a href="#install">install</a>
+    <a href="https://github.com/aborruso/fauxdata" class="nav-gh">★ GitHub</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section id="hero">
+  <pre class="ascii-logo glow">
+  ███████╗ █████╗ ██╗   ██╗██╗  ██╗██████╗  █████╗ ████████╗ █████╗
+  ██╔════╝██╔══██╗██║   ██║╚██╗██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗
+  █████╗  ███████║██║   ██║ ╚███╔╝ ██║  ██║███████║   ██║   ███████║
+  ██╔══╝  ██╔══██║██║   ██║ ██╔██╗ ██║  ██║██╔══██║   ██║   ██╔══██║
+  ██║     ██║  ██║╚██████╔╝██╔╝ ██╗██████╔╝██║  ██║   ██║   ██║  ██║
+  ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝</pre>
+
+  <p class="tagline glow">fake data. done right.</p>
+  <p class="subtagline">because your real data is a disaster anyway</p>
+
+  <div class="hero-prompt">
+    <span class="prompt-text">fauxdata generate schemas/people.yml --rows 1000 --validate</span>
+  </div>
+
+  <p class="scroll-hint">▼ scroll down ▼</p>
+</section>
+
+<!-- ─── WHY ─── -->
+<section id="why">
+  <div class="container">
+    <p class="section-label">// the problem</p>
+    <h2>your real data<br>is lying to you</h2>
+
+    <p>You've seen it. A column called <code class="amber">email</code> containing <code class="red">"test@test.com"</code>, <code class="red">"N/A"</code>, and a phone number. A date field with <code class="red">1900-01-01</code>. An age column that thinks someone is 847 years old. A <code class="amber">country</code> column that contains 73 different spellings of "Italy".</p>
+
+    <p>Real data is not "raw" — it's <mark>rotten</mark>. And the worst part? You can't share it. It's sensitive, it's GDPR-locked, it's "confidential", it lives in a database only accessible from the office VPN on Tuesdays.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card bad">
+        <h3>☠ real data</h3>
+        <ul class="check-list fails">
+          <li>null values where there shouldn't be any</li>
+          <li>emails like "aaa@bbb" or just "no"</li>
+          <li>ages of 0, 999, or -3</li>
+          <li>duplicate IDs that are "definitely unique"</li>
+          <li>dates from 1900 and 2099 mixed together</li>
+          <li>GDPR-protected — can't share with the team</li>
+          <li>requires a VPN, two approvals and a sacrifice</li>
+          <li>breaks your pipeline in a new way every Monday</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <h3>✓ fauxdata</h3>
+        <ul class="check-list passes">
+          <li>zero nulls — unless you asked for them</li>
+          <li>emails that look like actual emails</li>
+          <li>ages between 18 and 90, as specified</li>
+          <li>IDs that are actually unique</li>
+          <li>dates strictly within your range</li>
+          <li>shareable, reproducible, seedable</li>
+          <li>runs in milliseconds, from any machine</li>
+          <li>validated before it even reaches your pipeline</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- animated terminal: real data fails -->
+    <div class="terminal" id="term-bad">
+      <div class="terminal-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span style="margin-left:0.5rem">validating real_data_FINAL_v3_USE_THIS.csv</span>
+      </div>
+      <div class="terminal-body" id="term-bad-body">
+        <span class="t-line t-cmd">fauxdata validate real_data.csv schemas/people.yml</span>
+        <span class="t-line t-out anim-row">Loaded 4821 rows, 9 columns</span>
+        <span class="t-line t-section anim-row">Running validation...</span>
+        <span class="t-line anim-row"><span class="t-fail">✗ FAIL</span> <span class="dim">col_vals_not_null(email)      </span> <span class="red">247 failures</span></span>
+        <span class="t-line anim-row"><span class="t-fail">✗ FAIL</span> <span class="dim">col_vals_not_null(id)         </span> <span class="red">83 failures</span></span>
+        <span class="t-line anim-row"><span class="t-fail">✗ FAIL</span> <span class="dim">col_vals_between(age, 18, 90) </span> <span class="red">512 failures — found ages: 0, 847, -3, 9999</span></span>
+        <span class="t-line anim-row"><span class="t-fail">✗ FAIL</span> <span class="dim">col_vals_regex(email)         </span> <span class="red">1204 failures — found: "N/A", "test", "no@"</span></span>
+        <span class="t-line anim-row"><span class="t-fail">✗ FAIL</span> <span class="dim">rows_distinct(id)             </span> <span class="red">318 duplicate IDs — "definitely unique" 🙃</span></span>
+        <span class="t-line t-warn anim-row">⚠ 5/5 rules failed. This data is fiction. Bad fiction.</span>
+      </div>
+    </div>
+
+    <!-- animated terminal: fauxdata passes -->
+    <div class="terminal" id="term-good">
+      <div class="terminal-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span style="margin-left:0.5rem">validating fauxdata output — schema: people.yml</span>
+      </div>
+      <div class="terminal-body" id="term-good-body">
+        <span class="t-line t-cmd">fauxdata generate schemas/people.yml --rows 1000 --validate</span>
+        <span class="t-line t-out anim-row">Generated 1000 rows (seed=42, locale=IT)</span>
+        <span class="t-line t-section anim-row">Running validation...</span>
+        <span class="t-line anim-row"><span class="t-pass">✓ PASS</span> <span class="dim">col_vals_not_null(email)       </span> <span class="bright">1000/1000</span></span>
+        <span class="t-line anim-row"><span class="t-pass">✓ PASS</span> <span class="dim">col_vals_not_null(id)          </span> <span class="bright">1000/1000</span></span>
+        <span class="t-line anim-row"><span class="t-pass">✓ PASS</span> <span class="dim">col_vals_between(age, 18, 90)  </span> <span class="bright">1000/1000</span></span>
+        <span class="t-line anim-row"><span class="t-pass">✓ PASS</span> <span class="dim">col_vals_regex(email)          </span> <span class="bright">1000/1000</span></span>
+        <span class="t-line anim-row"><span class="t-pass">✓ PASS</span> <span class="dim">rows_distinct(id)              </span> <span class="bright">1000/1000 — truly unique</span></span>
+        <span class="t-line t-pass anim-row" style="font-weight:600">✓ 5/5 rules passed. This fake data is more real than your real data.</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── HOW ─── -->
+<section id="how">
+  <div class="container">
+    <p class="section-label">// how it works</p>
+    <h2>define once.<br>generate forever.</h2>
+
+    <p>Write a YAML schema. Run one command. Get a perfect, validated, reproducible dataset — in any format, any size, any locale.</p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">📐</span>
+        <h3>schema-first</h3>
+        <p>One YAML file defines everything: column types, ranges, presets, and validation rules. The schema is both the blueprint and the contract.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🌍</span>
+        <h3>locale-aware</h3>
+        <p>Set <code>locale: IT</code> and get Italian names, cities, email domains, IBANs, and phone formats — all coherent within each row. Works for 100+ countries.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✅</span>
+        <h3>validated by design</h3>
+        <p>The same schema that defines generation also drives validation. Run <code>--validate</code> and know your data is correct before it touches your pipeline.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔁</span>
+        <h3>reproducible</h3>
+        <p>Set <code>seed: 42</code> and generate the exact same dataset every time. Share the schema, share the seed, share the data.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">|</span>
+        <h3>pipeline-friendly</h3>
+        <p>Use <code>--out -</code> to pipe data directly to stdout. No files, no noise, no headers — just clean data flowing through your tools.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">📦</span>
+        <h3>multi-format</h3>
+        <p>CSV, Parquet, JSON, JSONL — the dataset, not the tool, decides the format. Switch with one flag.</p>
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge green">pointblank 0.22+</span>
+      <span class="badge green">polars</span>
+      <span class="badge amber">python 3.11+</span>
+      <span class="badge blue">100+ locales</span>
+      <span class="badge green">CI-friendly</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── SCHEMA ─── -->
+<section id="schema">
+  <div class="container">
+    <p class="section-label">// the schema</p>
+    <h2>YAML so readable<br>your PM could write it</h2>
+
+    <p>A schema is a plain YAML file. It describes the structure of your dataset, the constraints for each column, and the validation rules to apply. One file. Everything in it.</p>
+
+    <div class="code-block">
+<span class="yaml-comment"># schemas/people.yml</span>
+<span class="yaml-key">name</span>: <span class="yaml-val">people</span>
+<span class="yaml-key">rows</span>: <span class="yaml-val">1000</span>
+<span class="yaml-key">seed</span>: <span class="yaml-val">42</span>         <span class="yaml-comment"># reproducible — same seed, same data</span>
+<span class="yaml-key">locale</span>: <span class="yaml-val">IT</span>      <span class="yaml-comment"># Italian names, cities, emails, IBANs</span>
+
+<span class="yaml-key">output</span>:
+  <span class="yaml-key">format</span>: <span class="yaml-val">csv</span>    <span class="yaml-comment"># csv | parquet | json | jsonl</span>
+  <span class="yaml-key">path</span>: <span class="yaml-val">people.csv</span>
+
+<span class="yaml-key">columns</span>:
+  <span class="yaml-key">id</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">int</span>
+    <span class="yaml-key">unique</span>: <span class="yaml-val">true</span>
+    <span class="yaml-key">min</span>: <span class="yaml-val">1</span>  <span class="yaml-key">max</span>: <span class="yaml-val">99999</span>
+
+  <span class="yaml-key">name</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">string</span>
+    <span class="yaml-key">preset</span>: <span class="yaml-val">name</span>     <span class="yaml-comment"># → "Giulia Ferretti", "Marco Rossi"</span>
+
+  <span class="yaml-key">email</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">string</span>
+    <span class="yaml-key">preset</span>: <span class="yaml-val">email</span>    <span class="yaml-comment"># → "g.ferretti@virgilio.it"</span>
+
+  <span class="yaml-key">age</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">int</span>
+    <span class="yaml-key">min</span>: <span class="yaml-val">18</span>  <span class="yaml-key">max</span>: <span class="yaml-val">90</span>
+
+  <span class="yaml-key">status</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">string</span>
+    <span class="yaml-key">values</span>: <span class="yaml-val">[active, inactive, pending]</span>
+
+  <span class="yaml-key">signup_date</span>:
+    <span class="yaml-key">type</span>: <span class="yaml-type">date</span>
+    <span class="yaml-key">min</span>: <span class="yaml-val">"2020-01-01"</span>
+    <span class="yaml-key">max</span>: <span class="yaml-val">"2024-12-31"</span>
+
+<span class="yaml-key">validation</span>:
+  - <span class="yaml-key">rule</span>: <span class="yaml-val">col_vals_not_null</span>
+    <span class="yaml-key">columns</span>: <span class="yaml-val">[id, name, email]</span>
+  - <span class="yaml-key">rule</span>: <span class="yaml-val">col_vals_between</span>
+    <span class="yaml-key">column</span>: <span class="yaml-val">age</span>  <span class="yaml-key">min</span>: <span class="yaml-val">18</span>  <span class="yaml-key">max</span>: <span class="yaml-val">90</span>
+  - <span class="yaml-key">rule</span>: <span class="yaml-val">rows_distinct</span>
+    <span class="yaml-key">columns</span>: <span class="yaml-val">[id]</span>
+    </div>
+
+    <p class="dim" style="font-size:12px">Available presets: <code>name · email · phone_number · city · country_code_2 · company · job · address · postcode · ipv4 · uuid4 · iban · url · user_name · sentence · word</code> and more.</p>
+  </div>
+</section>
+
+<!-- ─── COMMANDS ─── -->
+<section id="commands">
+  <div class="container">
+    <p class="section-label">// the commands</p>
+    <h2>four commands.<br>one tool.</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>command</th>
+          <th>what it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>fauxdata generate SCHEMA</td>
+          <td>Generate a dataset from a YAML schema. Options: <code>--rows</code>, <code>--format</code>, <code>--seed</code>, <code>--out -</code> (stdout), <code>--validate</code></td>
+        </tr>
+        <tr>
+          <td>fauxdata validate DATASET SCHEMA</td>
+          <td>Validate an existing file against a schema. Exits with code 1 on failure — CI-ready.</td>
+        </tr>
+        <tr>
+          <td>fauxdata preview DATASET</td>
+          <td>Show the first N rows and column statistics (type, nulls, unique, min/max).</td>
+        </tr>
+        <tr>
+          <td>fauxdata init [--name]</td>
+          <td>Interactive wizard to create a new schema template.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span style="margin-left:0.5rem">pipeline example</span>
+      </div>
+      <div class="terminal-body">
+        <span class="t-line t-cmd">fauxdata generate schemas/orders.yml --rows 10000 --out - --format jsonl \</span>
+        <span class="t-line dim" style="padding-left:2rem">| python3 transform.py \</span>
+        <span class="t-line dim" style="padding-left:2rem">| duckdb -c "SELECT status, COUNT(*) FROM '/dev/stdin' GROUP BY ALL"</span>
+        <br>
+        <span class="t-line t-out">┌───────────┬──────────┐</span>
+        <span class="t-line t-out">│ status    │ count(*) │</span>
+        <span class="t-line t-out">│ delivered │ 3124     │</span>
+        <span class="t-line t-out">│ shipped   │ 2891     │</span>
+        <span class="t-line t-out">│ pending   │ 2003     │</span>
+        <span class="t-line t-out">│ cancelled │ 1982     │</span>
+        <span class="t-line t-out">└───────────┴──────────┘</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── INSTALL ─── -->
+<section id="install">
+  <div class="container">
+    <p class="section-label">// install</p>
+    <h2>up and running<br>in 30 seconds.</h2>
+
+    <div class="install-tabs">
+      <button class="tab active" onclick="switchTab('uv')">uv (recommended)</button>
+      <button class="tab" onclick="switchTab('pip')">pip</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-uv">
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>git clone https://github.com/aborruso/fauxdata && cd fauxdata</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'git clone https://github.com/aborruso/fauxdata && cd fauxdata')">copy</button>
+      </div>
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>uv tool install .</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'uv tool install .')">copy</button>
+      </div>
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>fauxdata --help</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'fauxdata --help')">copy</button>
+      </div>
+      <p class="dim" style="margin-top:1rem; font-size:12px"><a href="https://docs.astral.sh/uv/" style="color:var(--green-dim)">uv</a> installs fauxdata as an isolated tool. No virtualenv activation needed. <code>fauxdata</code> is available from any directory.</p>
+    </div>
+
+    <div class="tab-panel" id="tab-pip">
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>git clone https://github.com/aborruso/fauxdata && cd fauxdata</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'git clone https://github.com/aborruso/fauxdata && cd fauxdata')">copy</button>
+      </div>
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>pip install .</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'pip install .')">copy</button>
+      </div>
+      <div class="install-cmd">
+        <span class="prompt">$</span>
+        <code>fauxdata --help</code>
+        <button class="copy-btn" onclick="copyCmd(this, 'fauxdata --help')">copy</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="container">
+    <pre class="footer-ascii">
+ ___  _ _ _   _ _  ___  _ _  _  _ _    ___  _ _ _
+|  _|| | | | | | ||  _||_' || || | |  | __||_' |_'|
+| |_ | | | |_| | || |_  / /  >  < |__ | |_  / / / /
+|___||_____| |___||___|/_/  |_||_|____||___||_||_|</pre>
+    <p>built with <a href="https://github.com/posit-dev/pointblank">pointblank</a> by Posit · inspired by <a href="https://posit.co/blog/building-realistic-fake-datasets-with-pointblank/">this blog post</a></p>
+    <p><a href="https://github.com/aborruso/fauxdata">github.com/aborruso/fauxdata</a> · MIT License</p>
+    <p class="dim" style="margin-top:1rem; font-size:11px">// no real data was harmed in the making of this tool</p>
+  </div>
+</footer>
+
+<script>
+  // custom cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+
+  // tab switch
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // copy button
+  function copyCmd(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // animate terminal rows on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const rows = entry.target.querySelectorAll('.anim-row');
+        rows.forEach((row, i) => {
+          setTimeout(() => row.classList.add('visible'), i * 120);
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.terminal').forEach(t => observer.observe(t));
+</script>
+</body>
+</html>
