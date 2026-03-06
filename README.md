@@ -23,25 +23,21 @@ If you work with data — as an analyst, engineer, developer, or researcher — 
 [uv](https://docs.astral.sh/uv/) installs fauxdata as an isolated tool available globally, without polluting any existing Python environment:
 
 ```bash
-git clone https://github.com/aborruso/fauxdata
-cd fauxdata
-uv tool install .
+uv tool install fauxdata-cli
 ```
 
 After installation, `fauxdata` is available from any directory.
 
-To update after code changes:
+To upgrade:
 
 ```bash
-uv tool install . --reinstall
+uv tool upgrade fauxdata-cli
 ```
 
 ### With pip
 
 ```bash
-git clone https://github.com/aborruso/fauxdata
-cd fauxdata
-pip install .
+pip install fauxdata-cli
 ```
 
 ---
