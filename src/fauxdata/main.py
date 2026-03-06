@@ -9,11 +9,12 @@ import typer
 from rich import print as rprint
 from rich.console import Console
 
+from fauxdata import __version__
+
 app = typer.Typer(
     name="fauxdata",
     help="Generate and validate fake datasets from YAML schemas.",
     add_completion=False,
-    no_args_is_help=True,
 )
 console = Console()
 
@@ -24,10 +25,23 @@ def _banner():
     rprint("[dim]Generate and validate realistic fake datasets[/dim]\n")
 
 
+def _version_callback(value: bool):
+    if value:
+        rprint(f"fauxdata {__version__}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-V", callback=_version_callback, is_eager=True,
+        help="Show version and exit.",
+    ),
+):
     if ctx.invoked_subcommand is None:
         _banner()
+        rprint(ctx.get_help())
 
 
 @app.command("init")

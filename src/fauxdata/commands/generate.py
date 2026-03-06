@@ -12,7 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from fauxdata.generator import generate_dataset
-from fauxdata.output import default_output_path, export_dataset
+from fauxdata.output import default_output_path, export_dataset, write_stdout
 from fauxdata.schema import load_schema
 from fauxdata.validator import validate_dataset
 
@@ -35,7 +35,15 @@ def run(
     output_fmt = fmt or schema.output_format
     output_path = out or schema.output_path or default_output_path(schema.name, output_fmt)
 
-    rprint(Panel(f"[bold cyan]fauxdata generate[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
+    stdout_mode = output_path == "-"
+
+    if not stdout_mode:
+        rprint(Panel(f"[bold cyan]fauxdata generate[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
+
+    if stdout_mode:
+        df = generate_dataset(schema, rows=n, seed=rng_seed)
+        write_stdout(df, output_fmt)
+        return
 
     with console.status(f"[bold green]Generating {n} rows...[/bold green]"):
         df = generate_dataset(schema, rows=n, seed=rng_seed)
@@ -53,13 +61,22 @@ def _print_schema_table(schema, n: int, seed):
     t = Table(title=f"Schema: {schema.name}", show_header=True, header_style="bold magenta")
     t.add_column("Column", style="cyan")
     t.add_column("Type")
-    t.add_column("Preset/Values")
+    t.add_column("Preset/Pattern/Values")
     t.add_column("Min")
     t.add_column("Max")
     t.add_column("Unique")
+    t.add_column("Null%")
 
     for col in schema.columns:
-        preset_val = col.preset or (str(col.values) if col.values else "-")
+        if col.pattern:
+            preset_val = f"pattern:{col.pattern}"
+        elif col.preset:
+            preset_val = col.preset
+        elif col.values:
+            preset_val = str(col.values)
+        else:
+            preset_val = "-"
+        null_pct = f"{int(col.null_probability * 100)}%" if col.null_probability else "-"
         t.add_row(
             col.name,
             col.col_type,
@@ -67,6 +84,7 @@ def _print_schema_table(schema, n: int, seed):
             str(col.min) if col.min is not None else "-",
             str(col.max) if col.max is not None else "-",
             "yes" if col.unique else "no",
+            null_pct,
         )
 
     console.print(t)

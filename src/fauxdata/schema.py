@@ -57,6 +57,8 @@ class ColumnSchema:
     locale: str | None = None
     precision: int | None = None
     values: list | None = None  # for in_set
+    pattern: str | None = None  # regex pattern for string generation
+    null_probability: float | None = None  # e.g. 0.1 = 10% nulls
 
 
 @dataclass
@@ -142,6 +144,10 @@ def _parse_column(name: str, data: dict) -> ColumnSchema:
     if preset and preset not in STRING_PRESETS:
         raise ValueError(f"Column '{name}': unknown preset '{preset}'. Valid: {STRING_PRESETS}")
 
+    null_probability = data.get("null_probability", None)
+    if null_probability is not None and not (0.0 <= float(null_probability) <= 1.0):
+        raise ValueError(f"Column '{name}': null_probability must be between 0.0 and 1.0")
+
     return ColumnSchema(
         name=name,
         col_type=col_type,
@@ -153,6 +159,8 @@ def _parse_column(name: str, data: dict) -> ColumnSchema:
         locale=data.get("locale", None),
         precision=data.get("precision", None),
         values=data.get("values", None),
+        pattern=data.get("pattern", None),
+        null_probability=float(null_probability) if null_probability is not None else None,
     )
 
 
