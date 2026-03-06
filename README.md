@@ -284,9 +284,8 @@ Three ready-to-use schemas are included in `schemas/`:
 
 ## Acknowledgements
 
-fauxdata is built on top of [pointblank](https://github.com/posit-dev/pointblank), a data validation library by [Posit](https://posit.co/). The idea of using pointblank not just for validation but also for generating realistic synthetic datasets was inspired by the blog post:
+A heartfelt thank you to **[Rich Iannone](https://github.com/rich-iannone)** and the entire [pointblank](https://github.com/posit-dev/pointblank) team at [Posit](https://posit.co/) for building an exceptional data quality library — and for inspiring this project with their article:
 
 > **[Building realistic fake datasets with pointblank](https://posit.co/blog/building-realistic-fake-datasets-with-pointblank/)**
-> by the Posit team
 
-If you find pointblank useful, consider giving the project a star on GitHub.
+Without their work, fauxdata would not exist. If you find pointblank useful, please give it a ⭐ on GitHub.
