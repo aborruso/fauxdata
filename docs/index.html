@@ -583,13 +583,13 @@
     font-size: 12px;
     line-height: 2;
   }
-  footer a { color: var(--green-dim); text-decoration: none; }
-  footer a:hover { color: var(--green); text-decoration: underline; }
+  footer a { color: var(--green-dim); text-decoration: underline; }
+  footer a:hover { color: var(--green); }
 
   .footer-ascii {
     font-size: 9px;
     line-height: 1.2;
-    color: var(--green-dark);
+    color: #2a6a2a;
     margin: 1.5rem auto;
     white-space: pre;
     display: inline-block;
@@ -611,12 +611,12 @@
 
 <nav aria-label="Main navigation">
   <a href="#" class="nav-logo" aria-label="fauxdata — back to top">fauxdata</a>
-  <div class="nav-links" role="list">
-    <div class="nav-text-links" role="list">
-      <a href="#why" role="listitem">why</a>
-      <a href="#how" role="listitem">how</a>
-      <a href="#schema" role="listitem">schema</a>
-      <a href="#install" role="listitem">install</a>
+  <div class="nav-links">
+    <div class="nav-text-links">
+      <a href="#why">why</a>
+      <a href="#how">how</a>
+      <a href="#schema">schema</a>
+      <a href="#install">install</a>
     </div>
     <a href="https://github.com/aborruso/fauxdata" class="nav-gh" aria-label="View fauxdata on GitHub" rel="noopener noreferrer">★ GitHub</a>
   </div>
@@ -638,7 +638,7 @@
   <p class="tagline glow" id="hero-heading">fake data. done right.</p>
   <p class="subtagline">because your real data is a disaster anyway</p>
 
-  <div class="hero-prompt" aria-label="Example command: fauxdata generate schemas/people.yml --rows 1000 --validate">
+  <div class="hero-prompt" aria-hidden="true">
     <span class="prompt-text" aria-hidden="true">fauxdata generate schemas/people.yml --rows 1000 --validate</span>
   </div>
 
