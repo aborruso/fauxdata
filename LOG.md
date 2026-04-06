@@ -1,5 +1,14 @@
 # Log
 
+## 2026-04-06 — agent-friendly CLI
+
+- `init`: aggiunto `--description`, `--rows`, `--format`, `--yes`; questionary diventa fallback
+- Tutti i comandi: `epilog` con esempi in `--help`
+- `generate`: aggiunto `--dry-run` (mostra piano senza scrivere)
+- `generate`: output su successo mostra `output_path`, `format`, `rows` come chiave: valore
+- `init`: output su successo aggiunge `schema_path: <file>`
+- Fix venv: ricreato con `uv venv --clear` (cartella rinominata da `real_fake_datasets`)
+
 ## 2026-03-06 — v0.1.3
 
 - Add Python classifiers to pyproject.toml (3.11, 3.12, 3.13, MIT) — fixes pyversions badge

@@ -26,6 +26,7 @@ def run(
     fmt: Optional[str] = None,
     seed: Optional[int] = None,
     validate: bool = False,
+    dry_run: bool = False,
 ):
     """Generate a fake dataset from a YAML schema."""
     schema = load_schema(schema_path)
@@ -36,6 +37,18 @@ def run(
     output_path = out or schema.output_path or default_output_path(schema.name, output_fmt)
 
     stdout_mode = output_path == "-"
+
+    if dry_run:
+        rprint(Panel(f"[bold cyan]fauxdata generate --dry-run[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
+        rprint("[yellow]Dry run — no files will be written.[/yellow]\n")
+        rprint(f"  schema:      {schema_path}")
+        rprint(f"  rows:        {n}")
+        rprint(f"  seed:        {rng_seed}")
+        rprint(f"  format:      {output_fmt}")
+        rprint(f"  output_path: {output_path}")
+        rprint(f"  validate:    {validate}")
+        rprint(f"  columns:     {', '.join(c.name for c in schema.columns)}")
+        return
 
     if not stdout_mode:
         rprint(Panel(f"[bold cyan]fauxdata generate[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
@@ -51,7 +64,9 @@ def run(
     _print_schema_table(schema, n, rng_seed)
 
     saved = export_dataset(df, output_path, output_fmt)
-    rprint(f"\n[green]Saved[/green] [bold]{saved}[/bold]  ([dim]{output_fmt}, {n} rows[/dim])")
+    rprint(f"\noutput_path: {saved}")
+    rprint(f"format: {output_fmt}")
+    rprint(f"rows: {n}")
 
     if validate:
         _run_validation(df, schema)

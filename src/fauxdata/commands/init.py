@@ -75,8 +75,14 @@ validation:
 """
 
 
-def run(name: str | None = None):
-    """Interactive schema template creator."""
+def run(
+    name: str | None = None,
+    description: str | None = None,
+    rows: str | None = None,
+    fmt: str | None = None,
+    yes: bool = False,
+):
+    """Create a schema template."""
     rprint(Panel("[bold cyan]fauxdata init[/bold cyan] — schema template creator", expand=False))
 
     schema_name = name or questionary.text(
@@ -87,30 +93,37 @@ def run(name: str | None = None):
     if schema_name is None:
         raise typer.Abort()
 
-    description = questionary.text(
-        "Short description:",
-        default=f"{schema_name} dataset",
-    ).ask() or ""
+    desc = description if description is not None else (
+        questionary.text(
+            "Short description:",
+            default=f"{schema_name} dataset",
+        ).ask() or ""
+    )
 
-    rows = questionary.text("Default number of rows:", default="1000").ask() or "1000"
+    n_rows = rows if rows is not None else (
+        questionary.text("Default number of rows:", default="1000").ask() or "1000"
+    )
 
-    fmt = questionary.select(
-        "Default output format:",
-        choices=["csv", "parquet", "json", "jsonl"],
-    ).ask() or "csv"
+    output_fmt = fmt if fmt is not None else (
+        questionary.select(
+            "Default output format:",
+            choices=["csv", "parquet", "json", "jsonl"],
+        ).ask() or "csv"
+    )
 
     output_file = f"{schema_name}.yml"
     out_path = Path(output_file)
 
-    if out_path.exists():
+    if out_path.exists() and not yes:
         overwrite = questionary.confirm(f"{output_file} already exists. Overwrite?", default=False).ask()
         if not overwrite:
             rprint("[yellow]Aborted.[/yellow]")
             raise typer.Exit()
 
-    content = TEMPLATE.format(name=schema_name, description=description, rows=rows, fmt=fmt)
+    content = TEMPLATE.format(name=schema_name, description=desc, rows=n_rows, fmt=output_fmt)
     out_path.write_text(content)
 
     rprint(f"[green]Created[/green] [bold]{output_file}[/bold]")
     rprint("[dim]Edit the schema then run:[/dim]")
     rprint(f"  [cyan]fauxdata generate {output_file} --validate[/cyan]")
+    rprint(f"schema_path: {output_file}")
