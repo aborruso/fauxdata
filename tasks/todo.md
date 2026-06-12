@@ -1,38 +1,52 @@
-# Agent-friendly CLI improvements
+# Impatto pointblank v0.25.0 su fauxdata
 
-## Obiettivo
-Applicare i principi per CLI usabili dagli agenti AI.
+## Verdetto
+Sì, impatto **forte**. La release introduce `schema_from_tbl()` / `Schema.from_table()`:
+inferisce vincoli ricchi (min/max, unique, null rate, `allowed=`, preset come email/uuid)
+da una tabella reale, pensati esplicitamente per la generazione sintetica.
+È esattamente la premessa del progetto ("real fake datasets"): dato reale → schema → dato finto.
 
-## Fase 1 — Non-interactive `init`
+## BLOCCO — non installabile da PyPI
+- v0.25.0 è **solo taggata su GitHub**, PyPI è fermo a 0.24.0.
+- Non si può fare `pointblank>=0.25` + pubblicare fauxdata finché non esce su PyPI.
+- API verificata sul tag git (non dal summary): firma confermata
+  `schema_from_tbl(tbl, *, infer_constraints=True, categorical_threshold=20, detect_presets=True, sample_size=None)`.
 
-- [ ] Aggiungere `--description`, `--rows`, `--format`, `--yes` come flag a `init_cmd` in `main.py`
-- [ ] Aggiornare `run()` in `commands/init.py` per accettare questi parametri
-- [ ] Rendere i prompt questionary fallback (solo quando il flag è None)
-- [ ] `--yes` salta la conferma di sovrascrittura
+## Fase A — nuovo comando `fauxdata infer` (la feature)
+Flusso: tabella reale (CSV/Parquet via polars) → `schema_from_tbl` → YAML fauxdata → `generate`.
+- Nuovo `commands/infer.py`: legge file, chiama `schema_from_tbl`, serializza in YAML fauxdata.
+- Convertitore Field→ColumnSchema: mapping `dtype` (Int64/String/Float64/...) → `col_type`,
+  `allowed`→`values`, `preset`, `min_val/max_val`→`min/max`, `unique`, `null_probability`.
+- Flag da esporre: `--categorical-threshold`, `--no-detect-presets`, `--sample-size`, `--out schema.yml`.
+- Mapping **lossy** da segnalare: `StringField.min_length/max_length` non hanno campo nel YAML fauxdata.
+- Test di accettazione (vero criterio): infer da tabella campione → YAML → `generate` →
+  output rispetta gli stessi vincoli (range, set, preset). NON basta "ritorna uno Schema".
 
-## Fase 2 — Esempi in `--help`
+## Fase B — verifiche di regressione (cambi di comportamento)
+- `rows_distinct()`: in 0.25 le righe con null **non** sono più escluse. fauxdata lo usa nei
+  `VALID_RULES` del validator → può cambiare pass/fail su schemi esistenti. Da testare.
+- Lazy frame non più collezionati prematuramente: verificare che generator/validator non assuma DataFrame eager.
 
-- [ ] Aggiungere `epilog` con esempi a ogni comando in `main.py` (init, generate, validate, preview)
+## Fuori scope (non rilevante per fauxdata)
+- `Contract`/`Pipeline`, attachments multi-modali in `prompt()`, fix MCP server.
 
-## Fase 3 — `--dry-run` per `generate`
+## Decisioni (prese 2026-06-12)
+- **Timing**: solo piano. NON scrivere codice finché pointblank 0.25.0 non è su PyPI (ora è solo tag git, PyPI=0.24.0).
+- **Validation**: `infer` genera sia `columns:` sia `validation:` (regole derivate dai vincoli — es. `col_vals_between` da min/max, `col_vals_in_set` da allowed, `col_vals_not_null`, `rows_distinct` per colonne unique).
+- **Lunghezza stringhe**: aggiungere `min_length`/`max_length` a `ColumnSchema` per round-trip fedele
+  → tocca `schema.py` (parse + dataclass), `generator.py` (`pb.string_field(min_length=, max_length=)`), test.
 
-- [ ] Aggiungere flag `--dry-run` a `generate_cmd` in `main.py`
-- [ ] Implementare dry-run in `commands/generate.py`: mostra cosa farebbe senza scrivere file
+## Trigger di ripresa
+Quando `pip index versions pointblank` (o PyPI) mostra 0.25.0:
+1. Bump `pyproject.toml`: `pointblank>=0.25`, `uv sync`.
+2. Fase B prima (regressioni rows_distinct / lazy frame) — sono rischi su codice esistente.
+3. Poi Fase A (comando `infer` + estensione min_length/max_length).
 
-## Fase 4 — Output strutturato su successo
-
-- [ ] `generate`: output su successo mostra chiave=valore (output_path, format, rows)
-- [ ] `init`: output su successo mostra schema_path
-
-## Domande aperte
-
-- Aggiungere anche `--quiet` / `--json` per output machine-readable?
-- `validate` e `preview` hanno già flag, sufficienti?
-
-## Review
-
-- Tutte e 4 le fasi completate; 79/79 test passano, coverage 82%
-- `init` ora fully non-interactive con `--name --description --rows --format --yes`
-- `generate` ha `--dry-run` e output strutturato chiave: valore
-- Ogni comando ha esempi nel `--help` via `epilog`
-- Venv ricreato con `--clear` (cartella rinominata da `real_fake_datasets`)
+## Review (completato 2026-06-12)
+- **Fatto**: bump 0.25, comando `infer`, campi `min_length`/`max_length`, validation derivate, fix datetime CSV, errore chiaro unique+range. 102/102 test, coverage 83.2%.
+- **Fase B esito**: nessuna modifica necessaria. Schemi inclusi tutti PASS; `rows_distinct`/lazy frame non impattano (fauxdata usa DataFrame eager).
+- **Limiti noti documentati (README)**:
+  1. Bassa cardinalità → valori reali congelati in `values:` (leak su colonne sensibili). Mitigazione: `--categorical-threshold` / editing manuale.
+  2. `unique` + range int stretto non amplifica oltre la sorgente. Errore chiaro a runtime.
+- **Non fatto (decisione utente)**: bump versione pacchetto (0.1.4 → 0.1.5) e publish PyPI — non richiesto, lasciato all'utente.
+- **Possibili migliorie future** (docs/future-ideas.md candidate): opzione `infer` per non-categorizzare colonne testuali libere; flag per amplificazione (rilassa unique).

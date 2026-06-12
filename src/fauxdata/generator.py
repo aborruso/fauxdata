@@ -16,7 +16,17 @@ def generate_dataset(schema: SchemaConfig, rows: int | None = None, seed: int | 
     pb_schema = _build_pb_schema(schema)
     country = schema.locale or "US"
 
-    df = pb.generate_dataset(pb_schema, n=n, seed=rng_seed, country=country)
+    try:
+        df = pb.generate_dataset(pb_schema, n=n, seed=rng_seed, country=country)
+    except ValueError as e:
+        if "unique values" in str(e):
+            unique_cols = [c.name for c in schema.columns if c.unique]
+            raise ValueError(
+                f"Cannot generate {n} rows: a unique column has too narrow a range "
+                f"(unique columns: {', '.join(unique_cols) or 'n/a'}). "
+                f"Reduce --rows, widen min/max, or drop 'unique'."
+            ) from e
+        raise
     return df
 
 
@@ -82,7 +92,12 @@ def _col_to_field(col: ColumnSchema):
         elif col.preset:
             return pb.string_field(preset=col.preset, nullable=nullable, unique=unique, **np_kwargs)
         else:
-            return pb.string_field(nullable=nullable, unique=unique, **np_kwargs)
+            len_kwargs = {}
+            if col.min_length is not None:
+                len_kwargs["min_length"] = col.min_length
+            if col.max_length is not None:
+                len_kwargs["max_length"] = col.max_length
+            return pb.string_field(nullable=nullable, unique=unique, **len_kwargs, **np_kwargs)
 
     else:
         return pb.string_field(nullable=nullable, **np_kwargs)

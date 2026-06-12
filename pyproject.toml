@@ -1,6 +1,6 @@
 [project]
 name = "fauxdata-cli"
-version = "0.1.4"
+version = "0.1.5"
 description = "CLI for generating and validating fake datasets"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,7 +13,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pointblank>=0.22",
+    "pointblank>=0.25",
     "typer>=0.12",
     "rich>=13",
     "pyfiglet>=1.0",

@@ -167,3 +167,40 @@ columns:
                                   "--out", str(out), "--format", "csv"])
     assert result.exit_code == 0, result.output
     assert out.exists()
+
+
+# --- min_length / max_length (string columns) ---
+
+def test_min_max_length_parsing():
+    schema = _parse_schema({
+        "name": "x",
+        "columns": {"code": {"type": "string", "min_length": 4, "max_length": 8}},
+    })
+    col = schema.columns[0]
+    assert col.min_length == 4
+    assert col.max_length == 8
+
+
+def test_min_length_negative_rejected():
+    with pytest.raises(ValueError, match="min_length"):
+        _parse_schema({
+            "name": "x",
+            "columns": {"code": {"type": "string", "min_length": -1}},
+        })
+
+
+def test_min_length_gt_max_length_rejected():
+    with pytest.raises(ValueError, match="min_length"):
+        _parse_schema({
+            "name": "x",
+            "columns": {"code": {"type": "string", "min_length": 9, "max_length": 4}},
+        })
+
+
+def test_generate_respects_string_length():
+    schema = SchemaConfig(
+        name="x", rows=10, seed=1,
+        columns=[ColumnSchema(name="code", col_type="string", min_length=6, max_length=6)],
+    )
+    df = generate_dataset(schema)
+    assert df["code"].str.len_chars().to_list() == [6] * 10

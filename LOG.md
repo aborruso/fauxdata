@@ -1,6 +1,15 @@
 # Log
 
-## 2026-04-06 — agent-friendly CLI
+## 2026-06-12 — pointblank 0.25 + comando `infer`
+
+- Bump `pointblank>=0.25` (uscito su PyPI). Schemi inclusi (people/orders/events) verificati: tutti PASS.
+- Fase B regressioni: `rows_distinct` ora include righe con null (correttezza migliorata), lazy frame ok. fauxdata passa sempre DataFrame eager → nessun impatto.
+- Nuovo comando **`fauxdata infer DATASET`**: da tabella reale (csv/parquet/json/jsonl) genera schema YAML (`columns:` + `validation:`) via `pb.schema_from_tbl`. Flag: `--out/-o`, `--name/-n`, `--rows/-r`, `--format/-f`, `--categorical-threshold`, `--detect-presets/--no-detect-presets`, `--sample-size`.
+- `ColumnSchema`: nuovi campi `min_length`/`max_length` per stringhe (round-trip fedele); passati a `pb.string_field`. Validazione parsing (negativi, min>max).
+- infer CSV: `try_parse_dates=True` → date/datetime tipizzati invece che congelati come categorici.
+- generate: errore chiaro su conflitto unique+range stretto ("too narrow a range") invece del traceback criptico di pointblank.
+- Limite noto: colonne a bassa cardinalità congelate ai valori reali (possibile leak su colonne sensibili) — documentato nel README.
+- Test: +14 (`tests/test_infer.py` + length in `test_new_fields.py`). 102/102 pass, coverage 83.2%.
 
 - `init`: aggiunto `--description`, `--rows`, `--format`, `--yes`; questionary diventa fallback
 - Tutti i comandi: `epilog` con esempi in `--help`

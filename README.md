@@ -147,7 +147,7 @@ validation:
 |------|-------------|---------|
 | `int` | Integer | `min`, `max`, `unique` |
 | `float` | Floating point | `min`, `max` |
-| `string` | Text | `preset`, `values`, `unique` |
+| `string` | Text | `preset`, `values`, `pattern`, `unique`, `min_length`, `max_length` |
 | `bool` | Boolean | — |
 | `date` | Date | `min`, `max` (ISO format) |
 | `datetime` | Datetime | `min`, `max` (ISO format) |
@@ -234,6 +234,29 @@ fauxdata generate schemas/people.yml --out - --format jsonl | wc -l
 | `--validate` | `-v` | off | Run validation rules after generating |
 
 When `--out -` is used, all output messages are suppressed and only data is written to stdout.
+
+### `fauxdata infer DATASET`
+
+Build a YAML schema from a **real** dataset. fauxdata inspects the table (via pointblank's schema inference) and writes a schema with inferred ranges, categorical value sets, string presets (email, url…), uniqueness, null rates, and string lengths — plus matching `validation:` rules. Feed the result back to `fauxdata generate` to produce synthetic data that mirrors the real shape, without ever shipping the real values.
+
+```
+fauxdata infer real_data.csv                                   # -> real_data.yml
+fauxdata infer real_data.parquet --out schema.yml --name people
+fauxdata infer real_data.csv --categorical-threshold 50 --no-detect-presets
+fauxdata infer big.parquet --sample-size 10000 --out - | head  # stream to stdout
+```
+
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--out` | `-o` | `<name>.yml` | Output YAML path — use `-` for stdout |
+| `--name` | `-n` | dataset stem | Schema name |
+| `--rows` | `-r` | source rows | Rows to generate (written into the schema) |
+| `--format` | `-f` | `csv` | Default output format written into the schema |
+| `--categorical-threshold` | | `20` | Max unique values (int) or fraction (`0`–`1`) to treat a column as categorical |
+| `--detect-presets` / `--no-detect-presets` | | on | Match string columns to known presets (email, url…) |
+| `--sample-size` | | all rows | Sample N rows before analysis (for very large tables) |
+
+> **Notes.** Low-cardinality columns (≤ `--categorical-threshold` distinct values) are frozen to their exact source values via `values:` — desirable for categories like `status`, but it means sensitive low-cardinality columns are reproduced verbatim. Raise the threshold or edit the schema if that's not what you want. Also, a column inferred as `unique` over a narrow integer range cannot generate many more rows than the source; widen `min`/`max` or drop `unique` to amplify.
 
 ### `fauxdata validate DATASET SCHEMA`
 

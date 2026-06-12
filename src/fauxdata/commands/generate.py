@@ -19,6 +19,15 @@ from fauxdata.validator import validate_dataset
 console = Console()
 
 
+def _generate(schema, n, rng_seed):
+    """Generate, translating generation errors into a clean CLI exit."""
+    try:
+        return generate_dataset(schema, rows=n, seed=rng_seed)
+    except ValueError as e:
+        rprint(f"[red]Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+
 def run(
     schema_path: str,
     rows: Optional[int] = None,
@@ -54,12 +63,12 @@ def run(
         rprint(Panel(f"[bold cyan]fauxdata generate[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
 
     if stdout_mode:
-        df = generate_dataset(schema, rows=n, seed=rng_seed)
+        df = _generate(schema, n, rng_seed)
         write_stdout(df, output_fmt)
         return
 
     with console.status(f"[bold green]Generating {n} rows...[/bold green]"):
-        df = generate_dataset(schema, rows=n, seed=rng_seed)
+        df = _generate(schema, n, rng_seed)
 
     _print_schema_table(schema, n, rng_seed)
 

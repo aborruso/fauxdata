@@ -66,6 +66,35 @@ def init_cmd(
 
 
 @app.command(
+    "infer",
+    epilog=(
+        "Examples:\n\n"
+        "  fauxdata infer real_data.csv\n\n"
+        "  fauxdata infer real_data.parquet --out schema.yml --name people\n\n"
+        "  fauxdata infer real_data.csv --categorical-threshold 50 --no-detect-presets\n\n"
+        "  fauxdata infer big.parquet --sample-size 10000 --out - | head\n"
+    ),
+)
+def infer_cmd(
+    dataset: str = typer.Argument(..., help="Path to a real dataset (csv, parquet, json, jsonl)"),
+    out: Optional[str] = typer.Option(None, "--out", "-o", help="Output YAML path (use - for stdout; default: <name>.yml)"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Schema name (default: dataset file stem)"),
+    rows: Optional[int] = typer.Option(None, "--rows", "-r", help="Rows to generate (default: rows in source table)"),
+    fmt: str = typer.Option("csv", "--format", "-f", help="Default output format in the schema: csv, parquet, json, jsonl"),
+    categorical_threshold: float = typer.Option(20, "--categorical-threshold", help="Max unique values (int) or fraction (0-1) to treat a column as categorical"),
+    detect_presets: bool = typer.Option(True, "--detect-presets/--no-detect-presets", help="Match string columns to known presets (email, url, ...)"),
+    sample_size: Optional[int] = typer.Option(None, "--sample-size", help="Sample N rows before analysis (for very large tables)"),
+):
+    """Infer a YAML schema from a real dataset (powered by pointblank schema inference)."""
+    from fauxdata.commands.infer import run
+    run(
+        dataset_path=dataset, out=out, name=name, rows=rows, fmt=fmt,
+        categorical_threshold=categorical_threshold, detect_presets=detect_presets,
+        sample_size=sample_size,
+    )
+
+
+@app.command(
     "generate",
     epilog=(
         "Examples:\n\n"

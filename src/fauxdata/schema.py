@@ -59,6 +59,8 @@ class ColumnSchema:
     values: list | None = None  # for in_set
     pattern: str | None = None  # regex pattern for string generation
     null_probability: float | None = None  # e.g. 0.1 = 10% nulls
+    min_length: int | None = None  # min string length (string columns)
+    max_length: int | None = None  # max string length (string columns)
 
 
 @dataclass
@@ -148,6 +150,13 @@ def _parse_column(name: str, data: dict) -> ColumnSchema:
     if null_probability is not None and not (0.0 <= float(null_probability) <= 1.0):
         raise ValueError(f"Column '{name}': null_probability must be between 0.0 and 1.0")
 
+    min_length = data.get("min_length", None)
+    max_length = data.get("max_length", None)
+    if min_length is not None and int(min_length) < 0:
+        raise ValueError(f"Column '{name}': min_length must be >= 0")
+    if min_length is not None and max_length is not None and int(min_length) > int(max_length):
+        raise ValueError(f"Column '{name}': min_length must be <= max_length")
+
     return ColumnSchema(
         name=name,
         col_type=col_type,
@@ -161,6 +170,8 @@ def _parse_column(name: str, data: dict) -> ColumnSchema:
         values=data.get("values", None),
         pattern=data.get("pattern", None),
         null_probability=float(null_probability) if null_probability is not None else None,
+        min_length=int(min_length) if min_length is not None else None,
+        max_length=int(max_length) if max_length is not None else None,
     )
 
 
