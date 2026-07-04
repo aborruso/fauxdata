@@ -1,5 +1,10 @@
 # Log
 
+## 2026-07-04 — v0.1.6
+
+- Release `0.1.6`: include il fix issue #2 (`precision` float). Build con `uv build`, tag `v0.1.6`.
+- Deploy PyPI **manuale** (`uv publish`): nessun workflow di release automatico.
+
 ## 2026-07-04 — fix issue #2: `precision` float ignorato
 
 - Bug: l'opzione `precision` dei float veniva letta nello schema ma mai applicata (`pb.float_field` non ha il parametro). Valori generati con precisione piena.
