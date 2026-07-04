@@ -59,10 +59,14 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
 
    Il token si passa via `UV_PUBLISH_TOKEN` o `--token`. Non committare mai il token.
 
-8. **Verifica** l'installazione da PyPI:
+8. **Verifica / aggiorna da PyPI** (il pacchetto su PyPI è `fauxdata-cli`):
 
    ```bash
-   uvx fauxdata@X.Y.Z --version
+   uvx fauxdata@X.Y.Z --version          # verifica al volo la versione pubblicata
+
+   pip install --upgrade fauxdata-cli     # aggiorna un'installazione pip esistente
+   # oppure, se installato come uv tool:
+   uv tool upgrade fauxdata-cli
    ```
 
 9. **(Opzionale) GitHub Release**: dal tag già pushato.
