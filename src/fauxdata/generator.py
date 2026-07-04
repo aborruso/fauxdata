@@ -27,6 +27,16 @@ def generate_dataset(schema: SchemaConfig, rows: int | None = None, seed: int | 
                 f"Reduce --rows, widen min/max, or drop 'unique'."
             ) from e
         raise
+
+    # pointblank has no float precision option: round after generation
+    round_exprs = [
+        pl.col(col.name).round(col.precision)
+        for col in schema.columns
+        if col.col_type == "float" and col.precision is not None
+    ]
+    if round_exprs:
+        df = df.with_columns(round_exprs)
+
     return df
 
 

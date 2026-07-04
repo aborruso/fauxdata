@@ -87,6 +87,14 @@ def test_generate_seed_reproducibility(minimal_schema):
     assert df1.equals(df2)
 
 
+def test_generate_float_precision():
+    """float `precision` rounds generated values to the requested decimals."""
+    schema = _make_schema([ColumnSchema(name="f", col_type="float", min=1.0, max=200.0, precision=2)])
+    df = generate_dataset(schema, rows=20, seed=1)
+    for v in df["f"].to_list():
+        assert v == round(v, 2)
+
+
 def test_generate_all_types():
     """Generate a dataset with all supported column types."""
     schema = _make_schema([

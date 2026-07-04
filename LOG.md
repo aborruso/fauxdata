@@ -1,5 +1,11 @@
 # Log
 
+## 2026-07-04 — fix issue #2: `precision` float ignorato
+
+- Bug: l'opzione `precision` dei float veniva letta nello schema ma mai applicata (`pb.float_field` non ha il parametro). Valori generati con precisione piena.
+- Fix in `generator.py`: dopo `pb.generate_dataset`, arrotondo con `pl.col(...).round(precision)` le colonne `float` con `precision` impostato.
+- Verifica: reproducer della issue → output atteso (`27.74, 169.64, …`). Test `test_generate_float_precision`. 103/103 pass.
+
 ## 2026-06-12 — pointblank 0.25 + comando `infer`
 
 - Bump `pointblank>=0.25` (uscito su PyPI). Schemi inclusi (people/orders/events) verificati: tutti PASS.
