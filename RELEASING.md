@@ -34,7 +34,14 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    ls dist/   # fauxdata_cli-X.Y.Z-py3-none-any.whl + .tar.gz
    ```
 
-5. **Commit + tag + push**:
+5. **Aggiorna la CLI installata localmente** (`fauxdata` è installato come `uv tool`):
+
+   ```bash
+   uv tool install --reinstall .   # reinstalla dalla working copy
+   fauxdata --version              # deve stampare la nuova versione
+   ```
+
+6. **Commit + tag + push**:
 
    ```bash
    git add pyproject.toml src/fauxdata/__init__.py LOG.md
@@ -44,7 +51,7 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    git push origin vX.Y.Z
    ```
 
-6. **Pubblica su PyPI** (richiede token PyPI — step da eseguire a mano):
+7. **Pubblica su PyPI** (richiede token PyPI — step da eseguire a mano):
 
    ```bash
    uv publish              # oppure: twine upload dist/*
@@ -52,13 +59,13 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
 
    Il token si passa via `UV_PUBLISH_TOKEN` o `--token`. Non committare mai il token.
 
-7. **Verifica** l'installazione da PyPI:
+8. **Verifica** l'installazione da PyPI:
 
    ```bash
    uvx fauxdata@X.Y.Z --version
    ```
 
-8. **(Opzionale) GitHub Release**: dal tag già pushato.
+9. **(Opzionale) GitHub Release**: dal tag già pushato.
 
    ```bash
    gh release create vX.Y.Z --title "vX.Y.Z" --notes "<changelog dal LOG.md>"
