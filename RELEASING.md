@@ -70,9 +70,10 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    ```
 
 9. **GitHub Release**: dal tag già pushato (il tag da solo **non** crea la release).
+   **Titolo e note devono essere in inglese.**
 
    ```bash
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes "<changelog dal LOG.md>"
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes "<changelog in English>"
    ```
 
 ## Note
