@@ -69,7 +69,7 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    uv tool upgrade fauxdata-cli
    ```
 
-9. **(Opzionale) GitHub Release**: dal tag già pushato.
+9. **GitHub Release**: dal tag già pushato (il tag da solo **non** crea la release).
 
    ```bash
    gh release create vX.Y.Z --title "vX.Y.Z" --notes "<changelog dal LOG.md>"
@@ -79,3 +79,4 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
 
 - Se una release chiude una issue, referenziarla nel commit/tag (`#N`) e chiudere la issue con un commento che linka al commit.
 - La versione è testata dinamicamente (`test_cli_version` legge `__version__`), quindi il bump non rompe i test.
+- **Tag ≠ GitHub Release**: `git push origin vX.Y.Z` crea solo il tag; la pagina di release va creata a parte con `gh release create` (step 9).
