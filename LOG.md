@@ -1,7 +1,9 @@
 # Log
 
-## 2026-10-11 — 0.2.0 (non rilasciata): pointblank 1.0.1, `precision` nativa, `col_vals_str_len`, fix, comando `agent` e `--json`
+## 2026-10-11 — 0.2.0: pointblank 1.0.1, `precision` nativa, `col_vals_str_len`, fix, comando `agent` e `--json`
 
+- Rilasciata: tag `v0.2.0`, PyPI (`fauxdata-cli` 0.2.0), GitHub Release. Build da clone pulito: l'sdist della 0.1.6 conteneva anche `.claude/settings.local.json` e `share.png` non tracciati.
+- `carousel/`: 6 cartoline LinkedIn per l'annuncio (Typst, stile del sito; font VT323 e IBM Plex Mono inclusi con licenza OFL). Build: `typst compile --font-path fonts slides.typ output/deck.pdf`.
 - Bump `pointblank>=1.0.1` (da 0.25.0). 103/103 test invariati; schemi inclusi PASS; stesso seed → CSV identici byte per byte tra 0.25 e 1.0.1. Effetto collaterale: da 0.27 pointblank richiede `anthropic[bedrock]` → 20 pacchetti in più installati (anthropic, boto3, pydantic, …), non usati da fauxdata.
 - `precision` float: ora nativa (`pb.float_field(precision=)`), unicità garantita dopo l'arrotondamento. Limiti stretti verso l'interno sulla griglia dei decimali (`max: 9.999`, `precision: 2` → `9.99`) perché l'arrotondamento non sfori il range; errore chiaro se nessun valore ci sta. Documentata nel README (prima non lo era).
 - Nuova regola `col_vals_str_len` (`column`, `min`/`max`, null ignorati). `infer` la emette solo per stringhe libere: su preset/pattern/values il generatore ignora le lunghezze.
