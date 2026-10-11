@@ -69,7 +69,7 @@ fauxdata init --name orders
 
 ## Schema format
 
-A schema is a YAML file that describes the structure of your dataset. Here is a realistic example for a people dataset:
+A schema is a YAML file that describes the structure of your dataset. Here is a realistic example for a people dataset, adapted from [`schemas/people.yml`](https://github.com/aborruso/fauxdata/blob/main/schemas/people.yml):
 
 ```yaml
 name: people
@@ -341,13 +341,13 @@ fauxdata validate data.csv schema.yml --json
 
 ## Example schemas
 
-Three ready-to-use schemas are included in `schemas/`:
+Three ready-to-use schemas are included in [`schemas/`](https://github.com/aborruso/fauxdata/tree/main/schemas):
 
 | Schema | Domain | Columns |
 |--------|--------|---------|
-| `people.yml` | Personal data | id, name, email, age, city, country_code, active, signup_date, score |
-| `orders.yml` | E-commerce | order_id, customer_id, product, amount, status, created_at |
-| `events.yml` | Analytics | event_id, user_id, event_type, timestamp, ip, user_agent, session_duration |
+| [`people.yml`](https://github.com/aborruso/fauxdata/blob/main/schemas/people.yml) | Personal data | id, name, email, age, city, country_code, active, signup_date, score |
+| [`orders.yml`](https://github.com/aborruso/fauxdata/blob/main/schemas/orders.yml) | E-commerce | order_id, customer_id, product, amount, status, created_at |
+| [`events.yml`](https://github.com/aborruso/fauxdata/blob/main/schemas/events.yml) | Analytics | event_id, user_id, event_type, timestamp, ip, user_agent, session_duration |
 
 ---
 
