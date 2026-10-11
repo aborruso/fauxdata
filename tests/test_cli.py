@@ -110,3 +110,16 @@ def test_cli_generate_inline_schema(tmp_path):
                                   "--out", str(out), "--format", "csv", "--seed", "1"])
     assert result.exit_code == 0, result.output
     assert out.exists()
+
+
+def test_infer_cli_threshold_is_a_count(tmp_path):
+    """--categorical-threshold N from the CLI is a count, not a fraction (pointblank reads floats as fractions)."""
+    import polars as pl
+    import yaml
+    src = tmp_path / "real.csv"
+    pl.DataFrame({"note": [f"note {i}" for i in range(40)]}).write_csv(src)
+    for extra in ([], ["--categorical-threshold", "20"]):
+        out = tmp_path / "inferred.yml"
+        result = runner.invoke(app, ["infer", str(src), "-o", str(out), *extra])
+        assert result.exit_code == 0, result.output
+        assert "values" not in yaml.safe_load(out.read_text())["columns"]["note"]

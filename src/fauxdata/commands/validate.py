@@ -9,20 +9,22 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from fauxdata import jsonmode
 from fauxdata.schema import load_schema
 from fauxdata.validator import validate_dataset
 
 console = Console()
 
 
-def run(dataset_path: str, schema_path: str):
+def run(dataset_path: str, schema_path: str, json_out: bool = False):
     """Validate an existing dataset against a YAML schema."""
     schema = load_schema(schema_path)
 
-    rprint(Panel(
-        f"[bold cyan]fauxdata validate[/bold cyan]  [dim]{dataset_path}[/dim]",
-        expand=False,
-    ))
+    if not json_out:
+        rprint(Panel(
+            f"[bold cyan]fauxdata validate[/bold cyan]  [dim]{dataset_path}[/dim]",
+            expand=False,
+        ))
 
     ext = dataset_path.rsplit(".", 1)[-1].lower()
     if ext == "csv":
@@ -34,8 +36,17 @@ def run(dataset_path: str, schema_path: str):
     elif ext in ("jsonl", "ndjson"):
         df = pl.read_ndjson(dataset_path)
     else:
+        if json_out:
+            jsonmode.fail(f"Unsupported file format: .{ext}")
         rprint(f"[red]Unsupported file format: .{ext}[/red]")
         raise typer.Exit(code=1)
+
+    if json_out:
+        all_passed, results = validate_dataset(df, schema)
+        jsonmode.emit({"passed": all_passed, "rows": len(df), "results": results})
+        if not all_passed:
+            raise typer.Exit(code=1)
+        return
 
     rprint(f"  Loaded [bold]{len(df)}[/bold] rows, [bold]{len(df.columns)}[/bold] columns")
 
@@ -54,7 +65,12 @@ def run(dataset_path: str, schema_path: str):
     t.add_column("Status")
 
     for r in results:
-        status = "[green]PASS[/green]" if r["ok"] else "[red]FAIL[/red]"
+        if r["ok"]:
+            status = "[green]PASS[/green]"
+        elif not r["evaluated"]:
+            status = "[red]NOT RUN[/red]"
+        else:
+            status = "[red]FAIL[/red]"
         t.add_row(
             str(r["step"]),
             r["rule"],

@@ -104,6 +104,17 @@ def test_parse_validation_rules():
     assert rule.max == 120
 
 
+def test_parse_str_len_rule():
+    data = {
+        "name": "x",
+        "columns": {"code": {"type": "string"}},
+        "validation": [{"rule": "col_vals_str_len", "column": "code", "min": 2, "max": 5}],
+    }
+    rule = _parse_schema(data).validation_rules[0]
+    assert rule.rule == "col_vals_str_len"
+    assert (rule.column, rule.min, rule.max) == ("code", 2, 5)
+
+
 def test_parse_invalid_rule():
     data = {
         "name": "x",

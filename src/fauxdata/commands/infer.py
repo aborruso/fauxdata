@@ -14,6 +14,8 @@ import pointblank as pb
 import polars as pl
 import typer
 import yaml
+
+from fauxdata import jsonmode
 from rich import print as rprint
 from rich.panel import Panel
 
@@ -98,6 +100,13 @@ def _build_validation(columns: list[tuple[str, dict]]) -> list[dict]:
         if "values" in spec:
             rules.append({"rule": "col_vals_in_set", "column": name, "values": list(spec["values"])})
 
+    for name, spec in columns:
+        # only free-text columns: the generator ignores lengths for preset/pattern/values
+        free_text = not any(k in spec for k in ("preset", "pattern", "values"))
+        if spec["type"] == "string" and free_text and ("min_length" in spec or "max_length" in spec):
+            rules.append({"rule": "col_vals_str_len", "column": name,
+                          "min": spec.get("min_length"), "max": spec.get("max_length")})
+
     unique_cols = [name for name, spec in columns if spec.get("unique")]
     if unique_cols:
         rules.append({"rule": "rows_distinct", "columns": unique_cols})
@@ -105,7 +114,7 @@ def _build_validation(columns: list[tuple[str, dict]]) -> list[dict]:
     return rules
 
 
-def _load_table(path: str) -> pl.DataFrame:
+def _load_table(path: str, json_out: bool = False) -> pl.DataFrame:
     ext = path.rsplit(".", 1)[-1].lower()
     if ext == "csv":
         # try_parse_dates so date/datetime columns are typed (not frozen as categorical strings)
@@ -116,8 +125,15 @@ def _load_table(path: str) -> pl.DataFrame:
         return pl.read_json(path)
     if ext in ("jsonl", "ndjson"):
         return pl.read_ndjson(path)
+    if json_out:
+        jsonmode.fail(f"Unsupported file format: .{ext}")
     rprint(f"[red]Unsupported file format: .{ext}[/red]")
     raise typer.Exit(code=1)
+
+
+def _threshold(value: float) -> int | float:
+    """pointblank reads a float as a fraction of rows: whole numbers >= 1 are counts."""
+    return int(value) if value >= 1 and float(value).is_integer() else value
 
 
 def run(
@@ -129,19 +145,24 @@ def run(
     categorical_threshold: float = 20,
     detect_presets: bool = True,
     sample_size: int | None = None,
+    json_out: bool = False,
 ):
     """Infer a fauxdata YAML schema from a real dataset."""
-    rprint(Panel(
-        f"[bold cyan]fauxdata infer[/bold cyan]  [dim]{dataset_path}[/dim]",
-        expand=False,
-    ))
+    if json_out and out == "-":
+        jsonmode.fail("--json cannot be combined with --out - (the YAML would go to stdout)")
+    if not json_out:
+        rprint(Panel(
+            f"[bold cyan]fauxdata infer[/bold cyan]  [dim]{dataset_path}[/dim]",
+            expand=False,
+        ))
 
-    df = _load_table(dataset_path)
-    rprint(f"  Loaded [bold]{len(df)}[/bold] rows, [bold]{len(df.columns)}[/bold] columns")
+    df = _load_table(dataset_path, json_out)
+    if not json_out:
+        rprint(f"  Loaded [bold]{len(df)}[/bold] rows, [bold]{len(df.columns)}[/bold] columns")
 
     pb_schema = pb.schema_from_tbl(
         df,
-        categorical_threshold=categorical_threshold,
+        categorical_threshold=_threshold(categorical_threshold),
         detect_presets=detect_presets,
         sample_size=sample_size,
     )
@@ -170,6 +191,13 @@ def run(
         return
 
     Path(out_path).write_text(text)
+    if json_out:
+        jsonmode.emit({
+            "schema_path": out_path,
+            "columns": [col_name for col_name, _ in columns],
+            "validation_rules": len(schema_dict["validation"]),
+        })
+        return
     rprint(f"[green]Created[/green] [bold]{out_path}[/bold] "
            f"([bold]{len(columns)}[/bold] columns, "
            f"[bold]{len(schema_dict['validation'])}[/bold] validation rules)")

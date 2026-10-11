@@ -146,11 +146,25 @@ validation:
 | Type | Description | Options |
 |------|-------------|---------|
 | `int` | Integer | `min`, `max`, `unique` |
-| `float` | Floating point | `min`, `max` |
+| `float` | Floating point | `min`, `max`, `precision` |
 | `string` | Text | `preset`, `values`, `pattern`, `unique`, `min_length`, `max_length` |
 | `bool` | Boolean | — |
 | `date` | Date | `min`, `max` (ISO format) |
 | `datetime` | Datetime | `min`, `max` (ISO format) |
+
+### Float precision
+
+`precision` sets the number of decimal places of a `float` column, e.g. `precision: 2` for prices:
+
+```yaml
+price:
+  type: float
+  min: 1.0
+  max: 199.999
+  precision: 2
+```
+
+Rounding never pushes a value outside `min`/`max`. When a bound has more decimals than `precision`, fauxdata moves it inward to the nearest value that fits: in the example above `max: 199.999` becomes `199.99`, so no generated price can round up to `200.00`. If no value with the requested decimals fits between `min` and `max` (e.g. `min: 1.001`, `max: 1.009`, `precision: 2`), `generate` stops with an error instead of producing out-of-range data. With `unique: true`, values are unique after rounding.
 
 ### String presets
 
@@ -206,6 +220,7 @@ Supported locales include: `US`, `IT`, `DE`, `FR`, `ES`, `JP`, `BR`, `PL`, `NL`,
 | `col_vals_between` | Value in range | `column`, `min`, `max` |
 | `col_vals_regex` | Matches pattern | `column`, `pattern` |
 | `col_vals_in_set` | Value in allowed set | `column`, `values` |
+| `col_vals_str_len` | String length in range (nulls are ignored) | `column`, `min` and/or `max` |
 | `col_vals_gt` / `col_vals_lt` | Greater / less than | `column`, `min` / `max` |
 | `col_vals_ge` / `col_vals_le` | Greater / less or equal | `column`, `min` / `max` |
 | `rows_distinct` | Unique rows | `columns` |
@@ -232,6 +247,7 @@ fauxdata generate schemas/people.yml --out - --format jsonl | wc -l
 | `--format` | `-f` | from schema | Output format: `csv`, `parquet`, `json`, `jsonl`, `jsonlines` |
 | `--seed` | `-s` | from schema | Random seed for reproducibility |
 | `--validate` | `-v` | off | Run validation rules after generating |
+| `--json` | | off | Print only a JSON summary to stdout (see [Using fauxdata with AI agents](#using-fauxdata-with-ai-agents)) |
 
 When `--out -` is used, all output messages are suppressed and only data is written to stdout.
 
@@ -290,6 +306,36 @@ Interactive wizard to create a new schema template. Asks for name, description, 
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--name` | `-n` | Schema name (skips the interactive prompt) |
+
+---
+
+## Using fauxdata with AI agents
+
+fauxdata is designed to be driven by AI agents as well as by people.
+
+**Start with `fauxdata agent`.** It prints a Markdown guide with everything an agent needs to use the tool without reading this README: the workflow, the schema format, column types and options, presets, validation rules, the JSON output of each command, exit codes and a complete example schema. The lists of types, presets and rules are built from the code, so the guide always matches the installed version.
+
+```
+fauxdata agent > fauxdata-guide.md
+```
+
+**Add `--json` to get machine-readable results.** `generate`, `validate`, `infer` and `preview` accept `--json`: stdout then contains a single JSON object and nothing else (no panels, tables or colors).
+
+```
+fauxdata infer real.csv --out schema.yml --json
+{"schema_path": "schema.yml", "columns": ["id", "email", "age"], "validation_rules": 4}
+
+fauxdata generate schema.yml --out data.csv --validate --json
+{"output_path": "data.csv", "format": "csv", "rows": 1000, "seed": 42, "dry_run": false, "validation": {"passed": true, "results": [...]}}
+
+fauxdata validate data.csv schema.yml --json
+{"passed": true, "rows": 1000, "results": [{"step": 1, "rule": "col_vals_not_null", "column": "id", "passed": 1000, "failed": 0, "total": 1000, "ok": true, "evaluated": true}, ...]}
+```
+
+- Errors come back as `{"error": "..."}` on stdout with exit code `1`.
+- A step that could not run (for example, its column is missing from the data) has `"evaluated": false` and `"ok": false`; the human-readable table shows it as `NOT RUN`.
+- Exit codes: `0` success, `1` error or at least one validation rule failed.
+- `--json` cannot be combined with `--out -`, which already writes data (or YAML, for `infer`) to stdout.
 
 ---
 

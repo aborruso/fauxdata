@@ -9,12 +9,32 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from fauxdata import jsonmode
+
 console = Console()
 
 
-def run(dataset_path: str, rows: int = 10):
+_NUMERIC = (pl.Int8, pl.Int16, pl.Int32, pl.Int64,
+            pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
+            pl.Float32, pl.Float64)
+
+
+def _col_stats(series: pl.Series) -> dict:
+    """Type, nulls, distinct count and min/max (numeric and date columns only)."""
+    col_min = col_max = None
+    try:
+        if series.dtype in _NUMERIC or series.dtype == pl.Date or series.dtype == pl.Datetime:
+            col_min, col_max = series.min(), series.max()
+    except Exception:
+        pass
+    return {"name": series.name, "type": str(series.dtype), "nulls": series.null_count(),
+            "unique": series.n_unique(), "min": col_min, "max": col_max}
+
+
+def run(dataset_path: str, rows: int = 10, json_out: bool = False):
     """Show a preview of a dataset with column statistics."""
-    rprint(Panel(f"[bold cyan]fauxdata preview[/bold cyan]  [dim]{dataset_path}[/dim]", expand=False))
+    if not json_out:
+        rprint(Panel(f"[bold cyan]fauxdata preview[/bold cyan]  [dim]{dataset_path}[/dim]", expand=False))
 
     ext = dataset_path.rsplit(".", 1)[-1].lower()
     if ext == "csv":
@@ -26,8 +46,18 @@ def run(dataset_path: str, rows: int = 10):
     elif ext in ("jsonl", "ndjson"):
         df = pl.read_ndjson(dataset_path)
     else:
+        if json_out:
+            jsonmode.fail(f"Unsupported file format: .{ext}")
         rprint(f"[red]Unsupported file format: .{ext}[/red]")
         raise typer.Exit(code=1)
+
+    if json_out:
+        jsonmode.emit({
+            "rows": len(df),
+            "columns": [_col_stats(df[col]) for col in df.columns],
+            "head": df.head(rows).to_dicts(),
+        })
+        return
 
     rprint(f"  [bold]{len(df)}[/bold] rows × [bold]{len(df.columns)}[/bold] columns\n")
 
@@ -53,27 +83,11 @@ def run(dataset_path: str, rows: int = 10):
     stats_t.add_column("Max")
 
     for col in df.columns:
-        series = df[col]
-        dtype = str(series.dtype)
-        nulls = str(series.null_count())
-        unique = str(series.n_unique())
-
-        try:
-            if series.dtype in (pl.Int8, pl.Int16, pl.Int32, pl.Int64,
-                                 pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-                                 pl.Float32, pl.Float64):
-                col_min = str(series.min())
-                col_max = str(series.max())
-            elif series.dtype == pl.Date or series.dtype == pl.Datetime:
-                col_min = str(series.min())
-                col_max = str(series.max())
-            else:
-                col_min = "-"
-                col_max = "-"
-        except Exception:
-            col_min = "-"
-            col_max = "-"
-
-        stats_t.add_row(col, dtype, nulls, unique, col_min, col_max)
+        s = _col_stats(df[col])
+        stats_t.add_row(
+            col, s["type"], str(s["nulls"]), str(s["unique"]),
+            str(s["min"]) if s["min"] is not None else "-",
+            str(s["max"]) if s["max"] is not None else "-",
+        )
 
     console.print(stats_t)

@@ -9,14 +9,29 @@ import typer
 from rich import print as rprint
 from rich.console import Console
 
-from fauxdata import __version__
+from fauxdata import __version__, jsonmode
 
 app = typer.Typer(
     name="fauxdata",
-    help="Generate and validate fake datasets from YAML schemas.",
+    help="Generate and validate fake datasets from YAML schemas. "
+         "AI agents: run `fauxdata agent` for a full guide and use --json for machine-readable output.",
     add_completion=False,
 )
 console = Console()
+
+JSON_HELP = "Print only a JSON object to stdout (for scripts and AI agents)"
+
+
+def _run(run, json_out: bool, **kwargs):
+    """Call a command; with --json, any failure is reported as {"error": ...} on stdout."""
+    if not json_out:
+        return run(**kwargs)
+    try:
+        run(json_out=True, **kwargs)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        jsonmode.fail(str(e))
 
 
 def _banner():
@@ -84,10 +99,12 @@ def infer_cmd(
     categorical_threshold: float = typer.Option(20, "--categorical-threshold", help="Max unique values (int) or fraction (0-1) to treat a column as categorical"),
     detect_presets: bool = typer.Option(True, "--detect-presets/--no-detect-presets", help="Match string columns to known presets (email, url, ...)"),
     sample_size: Optional[int] = typer.Option(None, "--sample-size", help="Sample N rows before analysis (for very large tables)"),
+    json_out: bool = typer.Option(False, "--json", help=JSON_HELP),
 ):
     """Infer a YAML schema from a real dataset (powered by pointblank schema inference)."""
     from fauxdata.commands.infer import run
-    run(
+    _run(
+        run, json_out,
         dataset_path=dataset, out=out, name=name, rows=rows, fmt=fmt,
         categorical_threshold=categorical_threshold, detect_presets=detect_presets,
         sample_size=sample_size,
@@ -113,10 +130,12 @@ def generate_cmd(
     seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed for reproducibility"),
     validate: bool = typer.Option(False, "--validate", "-v", help="Run validation after generating"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be generated without writing files"),
+    json_out: bool = typer.Option(False, "--json", help=JSON_HELP),
 ):
     """Generate a fake dataset from a YAML schema."""
     from fauxdata.commands.generate import run
-    run(schema_path=schema, rows=rows, out=out, fmt=fmt, seed=seed, validate=validate, dry_run=dry_run)
+    _run(run, json_out, schema_path=schema, rows=rows, out=out, fmt=fmt, seed=seed,
+         validate=validate, dry_run=dry_run)
 
 
 @app.command(
@@ -130,10 +149,11 @@ def generate_cmd(
 def validate_cmd(
     dataset: str = typer.Argument(..., help="Path to dataset file (csv, parquet, json, jsonl)"),
     schema: str = typer.Argument(..., help="Path to YAML schema file"),
+    json_out: bool = typer.Option(False, "--json", help=JSON_HELP),
 ):
     """Validate an existing dataset against a YAML schema."""
     from fauxdata.commands.validate import run
-    run(dataset_path=dataset, schema_path=schema)
+    _run(run, json_out, dataset_path=dataset, schema_path=schema)
 
 
 @app.command(
@@ -147,7 +167,15 @@ def validate_cmd(
 def preview_cmd(
     dataset: str = typer.Argument(..., help="Path to dataset file"),
     rows: int = typer.Option(10, "--rows", "-r", help="Number of rows to preview"),
+    json_out: bool = typer.Option(False, "--json", help=JSON_HELP),
 ):
     """Show a preview and column statistics for a dataset."""
     from fauxdata.commands.preview import run
-    run(dataset_path=dataset, rows=rows)
+    _run(run, json_out, dataset_path=dataset, rows=rows)
+
+
+@app.command("agent")
+def agent_cmd():
+    """Print a Markdown guide for AI agents: workflow, schema format, presets, rules, JSON output."""
+    from fauxdata.commands.agent import run
+    run()

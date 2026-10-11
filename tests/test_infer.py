@@ -84,6 +84,17 @@ def test_build_validation_rules():
     assert "id" in nn["columns"]
 
 
+def test_build_validation_str_len_free_text_only():
+    """Length rule only for free-text strings: the generator ignores lengths elsewhere."""
+    columns = [
+        ("note", {"type": "string", "min_length": 3, "max_length": 12}),
+        ("email", {"type": "string", "preset": "email", "min_length": 6, "max_length": 7}),
+        ("code", {"type": "string", "pattern": "[A-Z]{3}", "min_length": 3, "max_length": 3}),
+    ]
+    str_len = [r for r in _build_validation(columns) if r["rule"] == "col_vals_str_len"]
+    assert str_len == [{"rule": "col_vals_str_len", "column": "note", "min": 3, "max": 12}]
+
+
 def test_build_validation_in_set_is_copy():
     """values in the rule must not alias the column spec list (no YAML anchor)."""
     vals = ["a", "b"]
@@ -121,6 +132,28 @@ def test_infer_roundtrip(tmp_path):
     # unique columns over a narrow integer range cannot yield many more rows.
     schema = load_schema(out)
     df = generate_dataset(schema)
+    all_passed, _ = validate_dataset(df, schema)
+    assert all_passed
+
+
+def test_infer_roundtrip_str_len(tmp_path):
+    """Free-text column gets a length rule that its own generated data passes."""
+    real = pl.DataFrame({
+        "note": ["ab", "hello", "free text", "x y z", "lorem ipsum", "abcdefghijk", "qq", "zzz"],
+        "email": [f"user{i}@example.com" for i in range(8)],
+    })
+    src = tmp_path / "real.csv"
+    real.write_csv(src)
+    out = tmp_path / "inferred.yml"
+    infer_mod.run(dataset_path=str(src), out=str(out), categorical_threshold=2)
+
+    rules = yaml.safe_load(out.read_text())["validation"]
+    str_len = [r for r in rules if r["rule"] == "col_vals_str_len"]
+    assert [r["column"] for r in str_len] == ["note"]
+    assert (str_len[0]["min"], str_len[0]["max"]) == (2, 11)
+
+    schema = load_schema(out)
+    df = generate_dataset(schema, rows=200, seed=7)
     all_passed, _ = validate_dataset(df, schema)
     assert all_passed
 
@@ -169,3 +202,21 @@ def test_infer_stdout(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "columns:" in captured.out
     assert "name: r" in captured.out
+
+
+def test_infer_roundtrip_nulls_and_low_cardinality_int(tmp_path):
+    """Nullable columns and low-cardinality ints survive infer -> generate -> validate."""
+    real = pl.DataFrame({
+        "age": [20 + i % 15 if i % 5 else None for i in range(40)],
+        "note": [f"note {i}" if i % 4 else None for i in range(40)],
+        "status": ["a", "b"] * 20,
+    })
+    src = tmp_path / "real.csv"
+    real.write_csv(src)
+    out = tmp_path / "inferred.yml"
+    infer_mod.run(dataset_path=str(src), out=str(out))
+
+    schema = load_schema(out)
+    df = generate_dataset(schema, rows=500, seed=3)
+    all_passed, results = validate_dataset(df, schema)
+    assert all_passed, [r for r in results if not r["ok"]]

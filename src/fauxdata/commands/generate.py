@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from fauxdata import jsonmode
 from fauxdata.generator import generate_dataset
 from fauxdata.output import default_output_path, export_dataset, write_stdout
 from fauxdata.schema import load_schema
@@ -19,11 +20,13 @@ from fauxdata.validator import validate_dataset
 console = Console()
 
 
-def _generate(schema, n, rng_seed):
+def _generate(schema, n, rng_seed, json_out=False):
     """Generate, translating generation errors into a clean CLI exit."""
     try:
         return generate_dataset(schema, rows=n, seed=rng_seed)
     except ValueError as e:
+        if json_out:
+            jsonmode.fail(str(e))
         rprint(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
 
@@ -36,6 +39,7 @@ def run(
     seed: Optional[int] = None,
     validate: bool = False,
     dry_run: bool = False,
+    json_out: bool = False,
 ):
     """Generate a fake dataset from a YAML schema."""
     schema = load_schema(schema_path)
@@ -46,6 +50,10 @@ def run(
     output_path = out or schema.output_path or default_output_path(schema.name, output_fmt)
 
     stdout_mode = output_path == "-"
+
+    if json_out:
+        _run_json(schema, n, rng_seed, output_fmt, output_path, validate, dry_run)
+        return
 
     if dry_run:
         rprint(Panel(f"[bold cyan]fauxdata generate --dry-run[/bold cyan]  [dim]{schema_path}[/dim]", expand=False))
@@ -79,6 +87,25 @@ def run(
 
     if validate:
         _run_validation(df, schema)
+
+
+def _run_json(schema, n, rng_seed, output_fmt, output_path, validate, dry_run):
+    if output_path == "-":
+        jsonmode.fail("--json cannot be combined with --out - (the data would go to stdout)")
+    summary = {"output_path": output_path, "format": output_fmt, "rows": n, "seed": rng_seed,
+               "dry_run": dry_run, "validation": None}
+    if dry_run:
+        jsonmode.emit(summary)
+        return
+    df = _generate(schema, n, rng_seed, json_out=True)
+    summary["output_path"] = str(export_dataset(df, output_path, output_fmt))
+    passed = True
+    if validate:
+        passed, results = validate_dataset(df, schema)
+        summary["validation"] = {"passed": passed, "results": results}
+    jsonmode.emit(summary)
+    if not passed:
+        raise typer.Exit(code=1)
 
 
 def _print_schema_table(schema, n: int, seed):
@@ -132,7 +159,12 @@ def _run_validation(df, schema):
     t.add_column("Status")
 
     for r in results:
-        status = "[green]PASS[/green]" if r["ok"] else "[red]FAIL[/red]"
+        if r["ok"]:
+            status = "[green]PASS[/green]"
+        elif not r["evaluated"]:
+            status = "[red]NOT RUN[/red]"
+        else:
+            status = "[red]FAIL[/red]"
         t.add_row(
             str(r["step"]),
             r["rule"],

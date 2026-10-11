@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
+
 import pointblank as pb
 import polars as pl
 
@@ -28,15 +30,6 @@ def generate_dataset(schema: SchemaConfig, rows: int | None = None, seed: int | 
             ) from e
         raise
 
-    # pointblank has no float precision option: round after generation
-    round_exprs = [
-        pl.col(col.name).round(col.precision)
-        for col in schema.columns
-        if col.col_type == "float" and col.precision is not None
-    ]
-    if round_exprs:
-        df = df.with_columns(round_exprs)
-
     return df
 
 
@@ -56,6 +49,8 @@ def _col_to_field(col: ColumnSchema):
     np_kwargs = {"null_probability": col.null_probability} if col.null_probability is not None else {}
 
     if col.col_type == "int":
+        if col.values:
+            return pb.int_field(allowed=[int(v) for v in col.values], nullable=nullable, unique=unique, **np_kwargs)
         return pb.int_field(
             min_val=int(col.min) if col.min is not None else None,
             max_val=int(col.max) if col.max is not None else None,
@@ -65,9 +60,27 @@ def _col_to_field(col: ColumnSchema):
         )
 
     elif col.col_type == "float":
+        if col.values:
+            return pb.float_field(allowed=[float(v) for v in col.values], nullable=nullable, unique=unique, **np_kwargs)
+        min_val = float(col.min) if col.min is not None else None
+        max_val = float(col.max) if col.max is not None else None
+        if col.precision is not None:
+            # pointblank rounds after drawing, so 9.996 -> 10.0 can exceed max=9.999:
+            # snap bounds inward to the precision grid to keep rounded values in range
+            step = Decimal(1).scaleb(-col.precision)
+            if min_val is not None:
+                min_val = float(Decimal(str(min_val)).quantize(step, rounding=ROUND_CEILING))
+            if max_val is not None:
+                max_val = float(Decimal(str(max_val)).quantize(step, rounding=ROUND_FLOOR))
+            if min_val is not None and max_val is not None and min_val > max_val:
+                raise ValueError(
+                    f"Column '{col.name}': no value with {col.precision} decimals "
+                    f"fits between min={col.min} and max={col.max}."
+                )
         return pb.float_field(
-            min_val=float(col.min) if col.min is not None else None,
-            max_val=float(col.max) if col.max is not None else None,
+            min_val=min_val,
+            max_val=max_val,
+            precision=col.precision,
             nullable=nullable,
             unique=unique,
             **np_kwargs,

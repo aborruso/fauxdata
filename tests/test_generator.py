@@ -95,6 +95,29 @@ def test_generate_float_precision():
         assert v == round(v, 2)
 
 
+def test_generate_float_precision_stays_in_range():
+    """Rounding must not push values outside min/max (e.g. 9.996 -> 10.0 > 9.999)."""
+    schema = _make_schema([ColumnSchema(name="f", col_type="float", min=9.99, max=9.999, precision=2)])
+    df = generate_dataset(schema, rows=200, seed=1)
+    assert df["f"].min() >= 9.99
+    assert df["f"].max() <= 9.999
+
+
+def test_generate_float_precision_unique():
+    """A unique float column stays unique after rounding."""
+    schema = _make_schema([ColumnSchema(name="f", col_type="float", min=0.0, max=1.0,
+                                        precision=1, unique=True)])
+    df = generate_dataset(schema, rows=8, seed=1)
+    assert df["f"].n_unique() == 8
+
+
+def test_generate_float_precision_no_value_fits():
+    """Clear error when no value with the given decimals fits in the range."""
+    schema = _make_schema([ColumnSchema(name="f", col_type="float", min=1.001, max=1.009, precision=2)])
+    with pytest.raises(ValueError, match="no value with 2 decimals"):
+        generate_dataset(schema)
+
+
 def test_generate_all_types():
     """Generate a dataset with all supported column types."""
     schema = _make_schema([
@@ -108,3 +131,11 @@ def test_generate_all_types():
     df = generate_dataset(schema, rows=5)
     assert df.height == 5
     assert set(["i", "f", "s", "b", "d", "dt"]) <= set(df.columns)
+
+
+@pytest.mark.parametrize("col_type,values", [("int", [3, 7, 11]), ("float", [0.5, 1.25])])
+def test_generate_numeric_values(col_type, values):
+    """`values` on numeric columns restricts generation to that set (infer emits it)."""
+    schema = _make_schema([ColumnSchema(name="n", col_type=col_type, values=values)])
+    df = generate_dataset(schema, rows=200, seed=1)
+    assert set(df["n"].to_list()) <= set(values)

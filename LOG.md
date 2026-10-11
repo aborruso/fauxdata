@@ -1,5 +1,21 @@
 # Log
 
+## 2026-10-11 — 0.2.0 (non rilasciata): pointblank 1.0.1, `precision` nativa, `col_vals_str_len`, fix, comando `agent` e `--json`
+
+- Bump `pointblank>=1.0.1` (da 0.25.0). 103/103 test invariati; schemi inclusi PASS; stesso seed → CSV identici byte per byte tra 0.25 e 1.0.1. Effetto collaterale: da 0.27 pointblank richiede `anthropic[bedrock]` → 20 pacchetti in più installati (anthropic, boto3, pydantic, …), non usati da fauxdata.
+- `precision` float: ora nativa (`pb.float_field(precision=)`), unicità garantita dopo l'arrotondamento. Limiti stretti verso l'interno sulla griglia dei decimali (`max: 9.999`, `precision: 2` → `9.99`) perché l'arrotondamento non sfori il range; errore chiaro se nessun valore ci sta. Documentata nel README (prima non lo era).
+- Nuova regola `col_vals_str_len` (`column`, `min`/`max`, null ignorati). `infer` la emette solo per stringhe libere: su preset/pattern/values il generatore ignora le lunghezze.
+- Fix: le regole sui valori (`between`, `gt/lt/ge/le`, `regex`, `in_set`) ignorano i null (`na_pass=True`; `in_set` via `None` nel set). Prima una colonna col 20% di null falliva 195/1000 righe.
+- Fix: `infer --categorical-threshold` da CLI arrivava come float (anche il default) e pointblank lo leggeva come frazione → ogni colonna stringa senza preset diventava categorica con i valori reali copiati in `values:`. Ora gli interi ≥ 1 passano come conteggio.
+- Fix: `values` sulle colonne `int`/`float` ora rispettato in generazione (passato come `allowed`); prima `infer` lo emetteva per gli int a bassa cardinalità e il generatore lo ignorava (403/500 fallimenti in round-trip).
+- Fix: `rows_distinct` esclude le righe con null nelle colonne controllate (come SQL UNIQUE); prima i null contavano come duplicati tra loro.
+- Bug di pointblank (non nostro): `unique=True` ignorato sui preset coerenti (`email`, `name`, `city`, …); segnalato in https://github.com/posit-dev/pointblank/issues/441. Non corretto: `unique` + `nullable` su range stretto non generabile.
+- Nuovo comando `fauxdata agent`: guida Markdown per agenti AI (flusso, output JSON, exit code, schema, tipi, preset, regole, esempio); liste generate dalle costanti di `schema.py`.
+- Nuovo flag `--json` su `generate`, `validate`, `infer`, `preview`: stdout contiene solo un oggetto JSON; errori come `{"error": ...}` con exit 1. Sezione README "Using fauxdata with AI agents".
+- Fix: un passo su una colonna assente dal dataset risultava `ok: true` con 0/0 righe; ora campo `evaluated` (da `validation_info`), `ok: false`, `NOT RUN` in tabella. `get_dataframe_report()` non usabile: fallisce con `rows_distinct`/`rows_complete` + `columns_subset` (segnalato in https://github.com/posit-dev/pointblank/issues/442). Chiude la issue #1 di fauxdata (output strutturato → `--json`).
+- Sito `docs/index.html`: badge pointblank 1.0+, "six commands", righe `infer` e `agent`, `--json`.
+- 143/143 test, coverage 87.05%.
+
 ## 2026-07-04 — v0.1.6
 
 - Release `0.1.6`: include il fix issue #2 (`precision` float). Build con `uv build`, tag `v0.1.6`.

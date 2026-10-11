@@ -40,6 +40,7 @@ VALID_RULES = {
     "col_vals_lt",
     "col_vals_ge",
     "col_vals_le",
+    "col_vals_str_len",
     "rows_distinct",
     "col_exists",
 }

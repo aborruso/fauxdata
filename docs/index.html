@@ -788,7 +788,7 @@
     </div>
 
     <div class="badges" aria-label="Technologies used">
-      <span class="badge green">pointblank 0.22+</span>
+      <span class="badge green">pointblank 1.0+</span>
       <span class="badge green">polars</span>
       <span class="badge amber">python 3.11+</span>
       <span class="badge blue">100+ locales</span>
@@ -858,7 +858,7 @@
 <section id="commands" aria-labelledby="commands-heading">
   <div class="container">
     <p class="section-label" aria-hidden="true">// the commands</p>
-    <h2 id="commands-heading">four commands.<br>one tool.</h2>
+    <h2 id="commands-heading">six commands.<br>one tool.</h2>
 
     <div class="table-wrap">
       <table>
@@ -871,11 +871,15 @@
         <tbody>
           <tr>
             <td><code>fauxdata generate SCHEMA</code></td>
-            <td>Generate a dataset from a YAML schema. Options: <code>--rows</code>, <code>--format</code>, <code>--seed</code>, <code>--out -</code> (stdout), <code>--validate</code></td>
+            <td>Generate a dataset from a YAML schema. Options: <code>--rows</code>, <code>--format</code>, <code>--seed</code>, <code>--out -</code> (stdout), <code>--validate</code>, <code>--json</code></td>
           </tr>
           <tr>
             <td><code>fauxdata validate DATASET SCHEMA</code></td>
-            <td>Validate an existing file against a schema. Exits with code 1 on failure — CI-ready.</td>
+            <td>Validate an existing file against a schema. Exits with code 1 on failure — CI-ready. Add <code>--json</code> for machine-readable results.</td>
+          </tr>
+          <tr>
+            <td><code>fauxdata infer DATASET</code></td>
+            <td>Build a YAML schema from a real dataset: ranges, categories, presets, null rates, plus matching validation rules. Generate look-alike data without shipping the real values.</td>
           </tr>
           <tr>
             <td><code>fauxdata preview DATASET</code></td>
@@ -884,6 +888,10 @@
           <tr>
             <td><code>fauxdata init [--name]</code></td>
             <td>Interactive wizard to create a new schema template.</td>
+          </tr>
+          <tr>
+            <td><code>fauxdata agent</code></td>
+            <td>Print a Markdown guide for AI agents: workflow, schema format, presets, rules, JSON output. <code>generate</code>, <code>validate</code>, <code>infer</code> and <code>preview</code> also speak <code>--json</code>.</td>
           </tr>
         </tbody>
       </table>
