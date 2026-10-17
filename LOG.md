@@ -1,5 +1,9 @@
 # Log
 
+## 2026-10-17 — 0.2.1: pointblank 1.1.0
+
+- Versione `0.2.1` (patch): porta su PyPI il nuovo minimo `pointblank>=1.1.0` e `unique` rispettato sui preset coerenti (vedi voce sotto). Link agli schemi d'esempio nel README. Build da clone pulito.
+
 ## 2026-10-17 — pointblank 1.1.0: chiuse le issue #441 e #442
 
 - Bump `pointblank>=1.1.0` (da 1.0.1; installata 1.1.1). Le due issue segnalate l'11 ottobre sono state chiuse il 12 e le correzioni sono uscite in v1.1.0 (15 ottobre): #441 con la PR posit-dev/pointblank#447 (`unique` sui preset coerenti), #442 con la PR posit-dev/pointblank#444 (`get_dataframe_report()` con `columns_subset`).
