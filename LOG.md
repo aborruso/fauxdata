@@ -2,7 +2,8 @@
 
 ## 2026-10-17 — 0.2.1: pointblank 1.1.0
 
-- Versione `0.2.1` (patch): porta su PyPI il nuovo minimo `pointblank>=1.1.0` e `unique` rispettato sui preset coerenti (vedi voce sotto). Link agli schemi d'esempio nel README. Build da clone pulito.
+- Versione `0.2.1` (patch): porta su PyPI il nuovo minimo `pointblank>=1.1.0` e `unique` rispettato sui preset coerenti (vedi voce sotto). Link agli schemi d'esempio nel README.
+- sdist a whitelist (`only-include`: `src`, `tests`, `schemas`, README, LICENSE, `pyproject.toml`): i file non tracciati (`share.png`, `.claude/settings.local.json`) non finiscono più nel pacchetto, niente più build da clone pulito. Verificato: build dalla working copy pulita, 144/144 test dallo sdist estratto.
 
 ## 2026-10-17 — pointblank 1.1.0: chiuse le issue #441 e #442
 

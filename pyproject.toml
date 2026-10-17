@@ -48,4 +48,4 @@ build-backend = "hatchling.build"
 packages = ["src/fauxdata"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["carousel"]
+only-include = ["src", "tests", "schemas", "README.md", "LICENSE", "pyproject.toml"]
