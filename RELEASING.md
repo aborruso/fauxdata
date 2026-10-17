@@ -17,6 +17,8 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    - `pyproject.toml` → `version = "X.Y.Z"`
    - `src/fauxdata/__init__.py` → `__version__ = "X.Y.Z"`
 
+   Poi `uv lock`: anche `uv.lock` registra la versione del pacchetto.
+
 2. **Aggiorna `LOG.md`**: nuova sezione in cima con data `YYYY-MM-DD` e le modifiche.
 
 3. **Test**: devono passare tutti.
@@ -34,6 +36,8 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
    ls dist/   # fauxdata_cli-X.Y.Z-py3-none-any.whl + .tar.gz
    ```
 
+   Lo sdist è a whitelist (`only-include` in `pyproject.toml`): contiene solo `src`, `tests`, `schemas`, README, LICENSE e `pyproject.toml`, quindi i file non tracciati della working copy non ci finiscono. Controllo: `.claude/skills/release/scripts/check-dist.sh X.Y.Z`.
+
 5. **Aggiorna la CLI installata localmente** (`fauxdata` è installato come `uv tool`):
 
    ```bash
@@ -44,7 +48,7 @@ Il deploy **non è automatico**: nessun workflow GitHub Actions. Ogni step è ma
 6. **Commit + tag + push**:
 
    ```bash
-   git add pyproject.toml src/fauxdata/__init__.py LOG.md
+   git add pyproject.toml src/fauxdata/__init__.py uv.lock LOG.md
    git commit -m "chore: vX.Y.Z — <sintesi>"
    git tag -a vX.Y.Z -m "vX.Y.Z — <sintesi>"
    git push origin main

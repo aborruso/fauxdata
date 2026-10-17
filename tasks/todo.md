@@ -1,4 +1,4 @@
-# Upgrade to pointblank 1.0.1
+# pointblank upgrade (0.25 → 1.1.0) and 0.2.x releases
 
 Context: fauxdata is pinned to pointblank 0.25.0 (`uv.lock`). PyPI has 0.26.0, 0.27.0, 1.0.0 and 1.0.1 (7 October 2026). The release notes declare no breaking changes. From the new features we take three things: the dependency bump, `float_field(precision=)` (0.26) and `col_vals_str_len()` (1.0.0).
 
@@ -10,9 +10,9 @@ Context: fauxdata is pinned to pointblank 0.25.0 (`uv.lock`). PyPI has 0.26.0, 0
 - [x] Same seed, same output: the three schemas generate byte-identical CSVs on 0.25.0 and 1.0.1
 - [x] Nothing broke
 
-Side effect: since 0.27.0 pointblank requires `anthropic[bedrock]>=0.68.0`, so installing fauxdata now also pulls in anthropic, boto3, botocore, pydantic, httpx2 and others (20 new packages in `uv.lock`). fauxdata does not use them. Unavoidable with `pointblank>=1.0.1`; worth a line in the release notes.
+Side effect: since 0.27.0 pointblank requires `anthropic[bedrock]>=0.68.0`, so installing fauxdata now also pulls in anthropic, boto3, botocore, pydantic, httpx2 and others (20 new packages in `uv.lock`). fauxdata does not use them. Unavoidable with `pointblank>=1.0.1`; worth a line in the release notes. (Gone since pointblank 1.1.0, Phase 5.)
 
-Why the minimum is 1.0.1 and not 1.0.0: with `polars>=1.0` a user can end up on Polars 2.x, and before 1.0.1 `col_vals_in_set` (which we use) fails when mixing ints and floats.
+Why the minimum was 1.0.1 and not 1.0.0 (raised to 1.1.0 in Phase 5): with `polars>=1.0` a user can end up on Polars 2.x, and before 1.0.1 `col_vals_in_set` (which we use) fails when mixing ints and floats.
 
 ## Phase 2 - Native float precision
 
@@ -82,11 +82,11 @@ Decided 2026-10-11: command name `agent`; `--json` on `generate` too; JSON shape
 
 ## Review (2026-10-11)
 
-- Shipped in 0.2.0 (not committed yet): pointblank `>=1.0.1`; native float `precision` with bounds snapped inward; `col_vals_str_len`; fixes for `--categorical-threshold` from the CLI, nulls in value rules, numeric `values` ignored by the generator, `rows_distinct` on null keys; `fauxdata agent` and `--json` on generate/validate/infer/preview.
+- Shipped in 0.2.0: pointblank `>=1.0.1`; native float `precision` with bounds snapped inward; `col_vals_str_len`; fixes for `--categorical-threshold` from the CLI, nulls in value rules, numeric `values` ignored by the generator, `rows_distinct` on null keys; `fauxdata agent` and `--json` on generate/validate/infer/preview.
 - 143 tests, coverage 87.05% (from 103 and 83.2%). Bundled schemas: same seed, byte-identical output to 0.1.6.
 - Also fixed: steps on missing columns (`evaluated` field, `NOT RUN`). Website updated. Closes fauxdata issue #1 (`--json`).
-- Found, not fixed: `unique` ignored on coherent presets (posit-dev/pointblank#441); `get_dataframe_report()` fails with `columns_subset` (posit-dev/pointblank#442); `unique` + `nullable` on a narrow int range not generable.
-- Behavior changes for the release notes: value rules ignore nulls; `rows_distinct` totals count non-null rows only; `--categorical-threshold N` is a count (`1` = one value); `precision` bounds snap inward; 20 extra transitive packages via `anthropic[bedrock]`.
+- Found, not fixed in 0.2.0: `unique` ignored on coherent presets (posit-dev/pointblank#441); `get_dataframe_report()` fails with `columns_subset` (posit-dev/pointblank#442) - both fixed upstream, see Phase 5; `unique` + `nullable` on a narrow int range not generable.
+- Behavior changes for the release notes: value rules ignore nulls; `rows_distinct` totals count non-null rows only; `--categorical-threshold N` is a count (`1` = one value); `precision` bounds snap inward; 20 extra transitive packages via `anthropic[bedrock]` (removed again in 0.2.1).
 - Release only on request (`RELEASING.md`).
 
 ## Phase 5 - pointblank 1.1.0 (2026-10-17)
@@ -101,3 +101,13 @@ Both upstream issues closed on 2026-10-12, fixes released in pointblank 1.1.0 (2
 - [x] Commit `75be2f0`, pushed to main (2026-10-17)
 
 Still open: item 6 above (`unique` + `nullable` on a narrow int range), not related to these issues.
+
+## Phase 6 - Release 0.2.1 (2026-10-17)
+
+- [x] README: links to the example schemas (`16fd6b0`)
+- [x] Version 0.2.1 in `pyproject.toml`, `__init__.py`, `uv.lock` (`acc4b83`)
+- [x] sdist whitelist (`only-include`) instead of clean-clone builds (`eda21ab`) → build from the working copy has no untracked files; 144 tests pass from the extracted sdist
+- [x] Published: tag `v0.2.1`, PyPI (`uvx --from fauxdata-cli==0.2.1 fauxdata --version` → 0.2.1), GitHub Release
+- [x] Project skill `/release` (`.claude/skills/release/`) with `scripts/check-dist.sh`, tested on a good and a polluted sdist
+- [x] doc-sync review: stale status in todo/LOG, `uv.lock` missing from `RELEASING.md`, README type table narrower than the generator → fixed
+- [x] Commit and push to main (2026-10-17); root `share.png` added to `.gitignore`

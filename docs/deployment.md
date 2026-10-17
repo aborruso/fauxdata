@@ -14,6 +14,8 @@ Coverage must stay above 80%. If it drops, fix before proceeding.
    - `src/fauxdata/__init__.py` → `__version__ = "X.Y.Z"`
    - `pyproject.toml` → `version = "X.Y.Z"`
 
+   Then `uv lock`: `uv.lock` records the package version too.
+
 3. Update `LOG.md` with a summary of changes under a new date heading.
 
 ---

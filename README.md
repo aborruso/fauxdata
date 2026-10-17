@@ -145,12 +145,12 @@ validation:
 
 | Type | Description | Options |
 |------|-------------|---------|
-| `int` | Integer | `min`, `max`, `unique` |
-| `float` | Floating point | `min`, `max`, `precision` |
+| `int` | Integer | `min`, `max`, `unique`, `values` |
+| `float` | Floating point | `min`, `max`, `precision`, `unique`, `values` |
 | `string` | Text | `preset`, `values`, `pattern`, `unique`, `min_length`, `max_length` |
 | `bool` | Boolean | — |
-| `date` | Date | `min`, `max` (ISO format) |
-| `datetime` | Datetime | `min`, `max` (ISO format) |
+| `date` | Date | `min`, `max` (ISO format), `unique` |
+| `datetime` | Datetime | `min`, `max` (ISO format), `unique` |
 
 ### Float precision
 

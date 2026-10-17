@@ -2,6 +2,7 @@
 
 ## 2026-10-17 — 0.2.1: pointblank 1.1.0
 
+- Rilasciata: tag `v0.2.1`, PyPI (`fauxdata-cli` 0.2.1, verificato con `uvx`), GitHub Release.
 - Versione `0.2.1` (patch): porta su PyPI il nuovo minimo `pointblank>=1.1.0` e `unique` rispettato sui preset coerenti (vedi voce sotto). Link agli schemi d'esempio nel README.
 - sdist a whitelist (`only-include`: `src`, `tests`, `schemas`, README, LICENSE, `pyproject.toml`): i file non tracciati (`share.png`, `.claude/settings.local.json`) non finiscono più nel pacchetto, niente più build da clone pulito. Verificato: build dalla working copy pulita, 144/144 test dallo sdist estratto.
 
@@ -11,7 +12,7 @@
 - `unique` sui preset coerenti ora rispettato: test `test_generate_unique_coherent_presets` (2000 righe, `name` ed `email` tutti distinti); con pointblank 1.0.1 fallisce (1959 su 2000). Tolto il "Known limit" dalla guida di `fauxdata agent`.
 - Validator: resta su `validation_info` (serve per `active`/`eval_error`, cioè `evaluated`/`NOT RUN`); aggiornato solo il commento, che citava il bug ormai corretto.
 - Effetto collaterale positivo: pointblank 1.1.x non richiede più `anthropic[bedrock]`, 20 pacchetti transitivi in meno in `uv.lock`.
-- Sito: badge `pointblank 1.1+`. 144/144 test, coverage 87.05%. Versione del pacchetto invariata (0.2.0), nessuna release.
+- Sito: badge `pointblank 1.1+`. 144/144 test, coverage 87.05%. Versione del pacchetto invariata (0.2.0), nessuna release (poi rilasciata come 0.2.1, vedi sopra).
 
 ## 2026-10-11 — 0.2.0: pointblank 1.0.1, `precision` nativa, `col_vals_str_len`, fix, comando `agent` e `--json`
 
