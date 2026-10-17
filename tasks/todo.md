@@ -98,6 +98,6 @@ Both upstream issues closed on 2026-10-12, fixes released in pointblank 1.1.0 (2
 - [x] #442: `get_dataframe_report()` works again, but the validator stays on `validation_info` (it needs `active`/`eval_error` for `evaluated`); outdated comment fixed
 - [x] Website badge `pointblank 1.1+`; LOG entry
 - [x] Full suite: 144 passed, coverage 87.05%
-- [ ] Commit (on user's ok)
+- [x] Commit `75be2f0`, pushed to main (2026-10-17)
 
 Still open: item 6 above (`unique` + `nullable` on a narrow int range), not related to these issues.
