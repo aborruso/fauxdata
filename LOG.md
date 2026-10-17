@@ -1,5 +1,13 @@
 # Log
 
+## 2026-10-17 — pointblank 1.1.0: chiuse le issue #441 e #442
+
+- Bump `pointblank>=1.1.0` (da 1.0.1; installata 1.1.1). Le due issue segnalate l'11 ottobre sono state chiuse il 12 e le correzioni sono uscite in v1.1.0 (15 ottobre): #441 con la PR posit-dev/pointblank#447 (`unique` sui preset coerenti), #442 con la PR posit-dev/pointblank#444 (`get_dataframe_report()` con `columns_subset`).
+- `unique` sui preset coerenti ora rispettato: test `test_generate_unique_coherent_presets` (2000 righe, `name` ed `email` tutti distinti); con pointblank 1.0.1 fallisce (1959 su 2000). Tolto il "Known limit" dalla guida di `fauxdata agent`.
+- Validator: resta su `validation_info` (serve per `active`/`eval_error`, cioè `evaluated`/`NOT RUN`); aggiornato solo il commento, che citava il bug ormai corretto.
+- Effetto collaterale positivo: pointblank 1.1.x non richiede più `anthropic[bedrock]`, 20 pacchetti transitivi in meno in `uv.lock`.
+- Sito: badge `pointblank 1.1+`. 144/144 test, coverage 87.05%. Versione del pacchetto invariata (0.2.0), nessuna release.
+
 ## 2026-10-11 — 0.2.0: pointblank 1.0.1, `precision` nativa, `col_vals_str_len`, fix, comando `agent` e `--json`
 
 - Rilasciata: tag `v0.2.0`, PyPI (`fauxdata-cli` 0.2.0), GitHub Release. Build da clone pulito: l'sdist della 0.1.6 conteneva anche `.claude/settings.local.json` e `share.png` non tracciati.

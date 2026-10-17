@@ -103,6 +103,15 @@ def test_generate_float_precision_stays_in_range():
     assert df["f"].max() <= 9.999
 
 
+def test_generate_unique_coherent_presets():
+    """unique is enforced on coherent presets (pointblank >= 1.1.0, posit-dev/pointblank#441)."""
+    schema = _make_schema([ColumnSchema(name="name", col_type="string", preset="name", unique=True),
+                           ColumnSchema(name="email", col_type="string", preset="email", unique=True)])
+    df = generate_dataset(schema, rows=2000, seed=1)
+    assert df["name"].n_unique() == 2000
+    assert df["email"].n_unique() == 2000
+
+
 def test_generate_float_precision_unique():
     """A unique float column stays unique after rounding."""
     schema = _make_schema([ColumnSchema(name="f", col_type="float", min=0.0, max=1.0,

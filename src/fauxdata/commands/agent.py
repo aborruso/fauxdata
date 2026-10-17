@@ -139,7 +139,7 @@ Notes:
 
 {presets}
 
-Presets are locale-aware and coherent within a row (the email matches the name, the city matches the country). Known limit: `unique: true` is not enforced on person and address presets such as `name`, `email`, `user_name`, `city` (pointblank issue #441). Validate with `rows_distinct` if uniqueness matters.
+Presets are locale-aware and coherent within a row (the email matches the name, the city matches the country).
 
 ## Validation rules
 

@@ -80,8 +80,7 @@ def _add_rule(v: pb.Validate, rule: ValidationRule) -> None:
 
 def _extract_results(v: pb.Validate, rules: list[ValidationRule]) -> list[dict]:
     """Extract per-step results as a list of dicts."""
-    # validation_info, not get_dataframe_report(): the report fails on list-valued
-    # columns (rows_distinct) in pointblank 1.0.1
+    # validation_info carries active and eval_error, used to flag steps that could not run
     steps = {s.i: s for s in v.validation_info}
     results = []
     # Build a flat list of steps (one per column for multi-column rules)

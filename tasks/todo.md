@@ -40,7 +40,7 @@ Today `generator.py` rounds after generation (`pl.col(...).round(precision)`), w
 
 1. [x] FIXED - `infer --categorical-threshold` from the CLI: typed `float`, so typer passed `20.0` even for the default; pointblank reads any float as a fraction of rows, so every non-preset string column became categorical with its real values copied into `values:`. Now whole numbers >= 1 are passed as int counts (`_threshold` in `infer.py`). CLI test added.
 2. [x] FIXED - value rules (`between`, `gt/lt/ge/le`, `regex`, `in_set`) counted nulls as failures. Now `na_pass=True` (`in_set` has no `na_pass`: `None` is added to the allowed set). Tests for every rule.
-3. [ ] pointblank bug, not ours: `unique=True` is ignored for coherent presets (person, address, business, credit card: `email`, `name`, `city`, ...). `_generate_single_country()` routes them to `_generate_column_with_row_context()`, which never checks `field.unique` (still so on upstream `main` 4510729). Pure-pointblank reproducer: 2000 rows → `email` 1998 distinct, `city` 156, no error. Reported upstream: https://github.com/posit-dev/pointblank/issues/441 (2026-10-11). Possible fauxdata-side warning: to decide.
+3. [x] FIXED UPSTREAM (2026-10-17) - pointblank bug, not ours: `unique=True` is ignored for coherent presets (person, address, business, credit card: `email`, `name`, `city`, ...). `_generate_single_country()` routes them to `_generate_column_with_row_context()`, which never checks `field.unique` (still so on upstream `main` 4510729). Pure-pointblank reproducer: 2000 rows → `email` 1998 distinct, `city` 156, no error. Reported upstream: https://github.com/posit-dev/pointblank/issues/441 (2026-10-11). Fixed by posit-dev/pointblank#447, released in 1.1.0: fauxdata now requires `pointblank>=1.1.0`, test `test_generate_unique_coherent_presets` added, no fauxdata-side warning needed.
 4. [x] FIXED - `infer` turned a low-cardinality int column into `values:`, but the generator ignored `values` for numeric columns (403/500 failures). Now `int`/`float` with `values` pass them as `allowed`. Tests: generator (int, float) + round-trip.
 5. [x] FIXED - `rows_distinct` counted null keys as duplicates of each other (120/500 failures). Now rows with a null in the checked columns are excluded first (`pre=drop_nulls(subset)`, as in SQL UNIQUE); the reported total is the number of non-null rows. Test with nulls only (pass) and real duplicates (fail).
 6. [ ] `unique` + `nullable` on a narrow int range: pointblank also needs unique values for the null rows, so even the source row count can't be generated (same on 0.25.0).
@@ -50,7 +50,7 @@ Today `generator.py` rounds after generation (`pl.col(...).round(precision)`), w
 - [x] `LOG.md`: dated entry
 - [x] Coverage not below 83.2%: now 85.14%, 119 passed
 - [x] Package version → 0.2.0 (`pyproject.toml`, `__init__.py`, `uv.lock`); release only on request (see `RELEASING.md`)
-- [ ] Single commit (on user's ok)
+- [x] Single commit (on user's ok) - `56cfe93`, released as 0.2.0
 
 ## Decisions (2026-10-11)
 
@@ -88,3 +88,16 @@ Decided 2026-10-11: command name `agent`; `--json` on `generate` too; JSON shape
 - Found, not fixed: `unique` ignored on coherent presets (posit-dev/pointblank#441); `get_dataframe_report()` fails with `columns_subset` (posit-dev/pointblank#442); `unique` + `nullable` on a narrow int range not generable.
 - Behavior changes for the release notes: value rules ignore nulls; `rows_distinct` totals count non-null rows only; `--categorical-threshold N` is a count (`1` = one value); `precision` bounds snap inward; 20 extra transitive packages via `anthropic[bedrock]`.
 - Release only on request (`RELEASING.md`).
+
+## Phase 5 - pointblank 1.1.0 (2026-10-17)
+
+Both upstream issues closed on 2026-10-12, fixes released in pointblank 1.1.0 (2026-10-15).
+
+- [x] `pyproject.toml`: `pointblank>=1.1.0`; `uv lock --upgrade-package pointblank` → 1.1.1; `anthropic[bedrock]` and its 20 transitive packages gone from `uv.lock`
+- [x] #441: test `test_generate_unique_coherent_presets` → passes on 1.1.1, fails on 1.0.1 (1959/2000); "Known limit" removed from `fauxdata agent`
+- [x] #442: `get_dataframe_report()` works again, but the validator stays on `validation_info` (it needs `active`/`eval_error` for `evaluated`); outdated comment fixed
+- [x] Website badge `pointblank 1.1+`; LOG entry
+- [x] Full suite: 144 passed, coverage 87.05%
+- [ ] Commit (on user's ok)
+
+Still open: item 6 above (`unique` + `nullable` on a narrow int range), not related to these issues.
