@@ -220,3 +220,70 @@ def test_infer_roundtrip_nulls_and_low_cardinality_int(tmp_path):
     df = generate_dataset(schema, rows=500, seed=3)
     all_passed, results = validate_dataset(df, schema)
     assert all_passed, [r for r in results if not r["ok"]]
+
+
+# --- name-matched presets on categorical columns ---
+
+def _infer_spec(tmp_path, column, values, **kwargs):
+    src = tmp_path / "real.csv"
+    pl.DataFrame({column: values}).write_csv(src)
+    out = tmp_path / "inferred.yml"
+    infer_mod.run(dataset_path=str(src), out=str(out), **kwargs)
+    return yaml.safe_load(out.read_text()), out
+
+
+@pytest.mark.parametrize("column", ["region", "state", "city", "country", "currency", "company", "job"])
+def test_infer_low_cardinality_keeps_source_values(tmp_path, column):
+    """A column matched to a preset only by its name stays categorical when values repeat."""
+    source = ["nord", "centro", "sud"] * 20
+    schema, out = _infer_spec(tmp_path, column, source)
+    spec = schema["columns"][column]
+    assert "preset" not in spec
+    assert sorted(spec["values"]) == ["centro", "nord", "sud"]
+
+    loaded = load_schema(out)
+    df = generate_dataset(loaded, rows=200, seed=1)
+    assert set(df[column].to_list()) <= {"nord", "centro", "sud"}
+    all_passed, results = validate_dataset(df, loaded)
+    assert all_passed, [r for r in results if not r["ok"]]
+
+
+@pytest.mark.parametrize("column,preset", [("name", "name"), ("first_name", "first_name"), ("phone", "phone_number"), ("address", "address")])
+def test_infer_personal_preset_never_frozen(tmp_path, column, preset):
+    """Personal presets are kept, so real people's values never reach the schema."""
+    schema, out = _infer_spec(tmp_path, column, ["Mario Rossi", "Anna Bianchi"] * 20)
+    assert schema["columns"][column]["preset"] == preset
+    assert "Mario Rossi" not in out.read_text()
+
+
+def test_infer_high_cardinality_keeps_preset(tmp_path):
+    schema, _ = _infer_spec(tmp_path, "city", [f"city {i % 30}" for i in range(60)])
+    assert schema["columns"]["city"]["preset"] == "city"
+
+
+def test_infer_unique_column_keeps_preset(tmp_path):
+    schema, _ = _infer_spec(tmp_path, "city", [f"city {i}" for i in range(10)])
+    spec = schema["columns"]["city"]
+    assert spec["preset"] == "city"
+    assert spec["unique"] is True
+
+
+def test_infer_fractional_threshold_applies_to_preset_columns(tmp_path):
+    values = [f"r{i % 8}" for i in range(100)]
+    assert "values" in _infer_spec(tmp_path, "region", values, categorical_threshold=0.1)[0]["columns"]["region"]
+    assert "preset" in _infer_spec(tmp_path, "region", values, categorical_threshold=0.05)[0]["columns"]["region"]
+
+
+def test_infer_no_detect_presets_unchanged(tmp_path):
+    schema, _ = _infer_spec(tmp_path, "region", ["a", "b"] * 10, detect_presets=False)
+    assert sorted(schema["columns"]["region"]["values"]) == ["a", "b"]
+
+
+def test_infer_categorical_with_nulls_keeps_nullable(tmp_path):
+    schema, out = _infer_spec(tmp_path, "region", ["nord", None, "sud", "nord"] * 10)
+    spec = schema["columns"]["region"]
+    assert sorted(spec["values"]) == ["nord", "sud"]
+    assert spec["nullable"] is True
+    loaded = load_schema(out)
+    all_passed, results = validate_dataset(generate_dataset(loaded, rows=200, seed=1), loaded)
+    assert all_passed, [r for r in results if not r["ok"]]

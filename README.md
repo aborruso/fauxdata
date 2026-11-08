@@ -253,7 +253,7 @@ When `--out -` is used, all output messages are suppressed and only data is writ
 
 ### `fauxdata infer DATASET`
 
-Build a YAML schema from a **real** dataset. fauxdata inspects the table (via pointblank's schema inference) and writes a schema with inferred ranges, categorical value sets, string presets (email, url…), uniqueness, null rates, and string lengths — plus matching `validation:` rules. Feed the result back to `fauxdata generate` to produce synthetic data that mirrors the real shape, without ever shipping the real values.
+Build a YAML schema from a **real** dataset. fauxdata inspects the table (via pointblank's schema inference) and writes a schema with inferred ranges, categorical value sets, string presets (email, url…), uniqueness, null rates, and string lengths — plus matching `validation:` rules. Feed the result back to `fauxdata generate` to produce synthetic data with the same columns, ranges and value sets, without copying the real rows. Each column is generated independently, so correlations between columns, rules such as `end_date > start_date`, and category frequencies are not preserved.
 
 ```
 fauxdata infer real_data.csv                                   # -> real_data.yml
@@ -272,7 +272,7 @@ fauxdata infer big.parquet --sample-size 10000 --out - | head  # stream to stdou
 | `--detect-presets` / `--no-detect-presets` | | on | Match string columns to known presets (email, url…) |
 | `--sample-size` | | all rows | Sample N rows before analysis (for very large tables) |
 
-> **Notes.** Low-cardinality columns (≤ `--categorical-threshold` distinct values) are frozen to their exact source values via `values:` — desirable for categories like `status`, but it means sensitive low-cardinality columns are reproduced verbatim. Raise the threshold or edit the schema if that's not what you want. Also, a column inferred as `unique` over a narrow integer range cannot generate many more rows than the source; widen `min`/`max` or drop `unique` to amplify.
+> **Notes.** Low-cardinality columns (≤ `--categorical-threshold` distinct values) are frozen to their exact source values via `values:` — desirable for categories like `status`, but it means sensitive low-cardinality columns are reproduced verbatim. Raise the threshold or edit the schema if that's not what you want. This also applies to columns whose name suggests a place, company or job (`region`, `city`, `company`...). Personal presets are never frozen, so a low-cardinality column such as `product_name` still gets people's names: use `--no-detect-presets` or edit the schema. Also, a column inferred as `unique` over a narrow integer range cannot generate many more rows than the source; widen `min`/`max` or drop `unique` to amplify.
 
 ### `fauxdata validate DATASET SCHEMA`
 
