@@ -344,7 +344,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pointblank", specifier = ">=1.1.0" },
+    { name = "pointblank", specifier = ">=1.2.0" },
     { name = "polars", specifier = ">=1.0" },
     { name = "pyfiglet", specifier = ">=1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
@@ -361,7 +361,7 @@ dev = [
 
 [[package]]
 name = "great-tables"
-version = "0.22.0"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "babel" },
@@ -373,9 +373,9 @@ dependencies = [
     { name = "nokap" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/be/3e35429e915bc355cc69f522d79ccc122858ae038738ca3dcd8a7d51c854/great_tables-0.22.0.tar.gz", hash = "sha256:ccf031d90cab599328232bc32afadef215da1457dbc025d0972048cc2050fd57", size = 26110797, upload-time = "2026-06-12T01:07:28.678Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/41/323c0ed560f95c948dbbe3a9dc0fc6056bf518e25dd3daa4367db0d6986d/great_tables-1.1.0.tar.gz", hash = "sha256:847ae518a21f982c19ba6d2b495932bef766241068eded0d6a788a364acdb07d", size = 27857749, upload-time = "2026-10-15T15:44:09.386Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/46/0fd6ca17e3b40b657af79aaf50e2e54f736f4ad5585e201da702c52c7c2a/great_tables-0.22.0-py3-none-any.whl", hash = "sha256:7a7f81c2d1eb66d88166e864ac820966c23f04e4ecb41eeca8f9df1e1b21764d", size = 1455612, upload-time = "2026-06-12T01:07:26.815Z" },
+    { url = "https://files.pythonhosted.org/packages/48/4d/c58385ec1e841a833753c3b61840efa0f3e216b411cd713a52bb2a0b0823/great_tables-1.1.0-py3-none-any.whl", hash = "sha256:4e22cd6918d0bb6681d27fca19bb6a73e881b69165e35be303f45cb67824f595", size = 1683654, upload-time = "2026-10-15T15:44:07.483Z" },
 ]
 
 [[package]]
@@ -520,7 +520,7 @@ wheels = [
 
 [[package]]
 name = "pointblank"
-version = "1.1.1"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -533,9 +533,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9e/f1/1557614a8c755b1042d9952de4400b8b4ca65b0cb9d4743bd37a7e897375/pointblank-1.1.1.tar.gz", hash = "sha256:9966007d7784f16a0a669ae24abf0adc9f2b1117bf1f8bd3c2c849ad9089da2f", size = 46786661, upload-time = "2026-10-15T18:58:00.96Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/1e/f5d8291e7c147c0f63f773a7f101e10c55ed9d3addb19361b928fa9a8a98/pointblank-1.2.0.tar.gz", hash = "sha256:f22693a1731520a4c931c0f9b2a06e98d5d24f2dab415871254c9858bfa4b0ca", size = 56580120, upload-time = "2026-11-06T17:15:04.183Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/ec/d848259c006adc8070490a5d63ebca98386aeacb340228b45f6f270b1341/pointblank-1.1.1-py3-none-any.whl", hash = "sha256:a81d2898bcf2b0610f501cb83c301102752dd2b2a158526e1c77baff650a6114", size = 19407299, upload-time = "2026-10-15T18:57:57.94Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/09/43c86ca90ec86d26f99156c73a2a54c6ca80c2fdf99fe1511b89b952144a/pointblank-1.2.0-py3-none-any.whl", hash = "sha256:1a3178cc47139e767ae15bcbffefc71f0fd8491804c0c659e2e2d0dd25cbfcbf", size = 19587455, upload-time = "2026-11-06T17:15:01.177Z" },
 ]
 
 [[package]]
