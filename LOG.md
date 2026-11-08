@@ -1,5 +1,9 @@
 # Log
 
+## 2026-11-08 — Sito: tabella DuckDB nel terminale
+
+- `docs/index.html`: la tabella dell'esempio pipeline era disallineata perché `white-space: nowrap` comprimeva gli spazi. Nuova classe `t-table` con `white-space: pre` e interlinea ridotta. Verificata nel browser a 1200 e 375 px.
+
 ## 2026-11-08 — `tasks/todo.md` fuori da git
 
 - `tasks/todo.md` aggiunto a `.gitignore` e tolto dal tracciamento: resta solo in locale, la cronologia precedente rimane in git.

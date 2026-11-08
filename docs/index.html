@@ -395,6 +395,7 @@
   .t-line { display: block; white-space: nowrap; }
   .t-cmd::before { content: '$ '; color: var(--green-dim); }
   .t-out { color: var(--text-dim); padding-left: 1rem; }
+  .t-table { white-space: pre; line-height: 1.3; }
   .t-pass { color: var(--green); }
   .t-fail { color: var(--red); }
   .t-warn { color: var(--amber); }
@@ -907,15 +908,15 @@
         <span class="t-line dim" style="padding-left:2rem">| python3 transform.py \</span>
         <span class="t-line dim" style="padding-left:2rem">| duckdb -c "SELECT status, COUNT(*) FROM '/dev/stdin' GROUP BY ALL"</span>
         <br>
-        <span class="t-line t-out">┌───────────┬──────────┐</span>
-        <span class="t-line t-out">│  status   │ count(*) │</span>
-        <span class="t-line t-out">│  varchar  │  int64   │</span>
-        <span class="t-line t-out">├───────────┼──────────┤</span>
-        <span class="t-line t-out">│ delivered │     3124 │</span>
-        <span class="t-line t-out">│ shipped   │     2891 │</span>
-        <span class="t-line t-out">│ pending   │     2003 │</span>
-        <span class="t-line t-out">│ cancelled │     1982 │</span>
-        <span class="t-line t-out">└───────────┴──────────┘</span>
+        <span class="t-line t-out t-table">┌───────────┬──────────┐</span>
+        <span class="t-line t-out t-table">│  status   │ count(*) │</span>
+        <span class="t-line t-out t-table">│  varchar  │  int64   │</span>
+        <span class="t-line t-out t-table">├───────────┼──────────┤</span>
+        <span class="t-line t-out t-table">│ delivered │     3124 │</span>
+        <span class="t-line t-out t-table">│ shipped   │     2891 │</span>
+        <span class="t-line t-out t-table">│ pending   │     2003 │</span>
+        <span class="t-line t-out t-table">│ cancelled │     1982 │</span>
+        <span class="t-line t-out t-table">└───────────┴──────────┘</span>
       </div>
     </div>
   </div>
