@@ -1,7 +1,12 @@
 # Log
 
+## 2026-11-08 — `tasks/todo.md` fuori da git
+
+- `tasks/todo.md` aggiunto a `.gitignore` e tolto dal tracciamento: resta solo in locale, la cronologia precedente rimane in git.
+
 ## 2026-11-08 — 0.2.2: fix `infer`, pointblank 1.2.0
 
+- Rilasciata: tag `v0.2.2`, PyPI (`fauxdata-cli` 0.2.2, verificato con `uvx`), GitHub Release.
 - Versione `0.2.2` (patch): colonne categoriche con preset assegnato dal nome (`region`, `city`, ...) e minimo `pointblank>=1.2.0`, vedi voci sotto.
 - Cambio di comportamento: a parità di seed i dati sono diversi da quelli delle versioni precedenti.
 
