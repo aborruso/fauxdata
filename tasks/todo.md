@@ -111,3 +111,21 @@ Still open: item 6 above (`unique` + `nullable` on a narrow int range), not rela
 - [x] Project skill `/release` (`.claude/skills/release/`) with `scripts/check-dist.sh`, tested on a good and a polluted sdist
 - [x] doc-sync review: stale status in todo/LOG, `uv.lock` missing from `RELEASING.md`, README type table narrower than the generator → fixed
 - [x] Commit and push to main (2026-10-17); root `share.png` added to `.gitignore`
+
+## Phase 7 - `infer`: name-matched presets on categorical columns (2026-11-08)
+
+pointblank assigns presets such as `state` from the column name alone and skips categorical detection, so `region` with nord/centro/sud generated US states. This contradicts the README.
+
+- [x] Failing tests for the low-cardinality case → 9 failed before the fix (2026-11-08)
+- [x] `infer`: non-personal name-matched presets with few distinct, non-unique values become `values:` → `_restore_categorical` in `commands/infer.py`, tests pass, personal presets stay presets
+- [x] README: replaced "mirrors the real shape" with what is and is not preserved; notes extended
+- [x] LOG, full test suite → 160 passed, coverage 87.26%; end-to-end on `region`: validation passes, only source values generated
+
+Unresolved: `product_name` still matches the personal `name` preset (kept on purpose, to avoid copying real names).
+
+## Phase 8 - pointblank 1.2.0 (2026-11-08)
+
+- [x] Reported upstream: posit-dev/pointblank#539 (name-matched presets on categorical columns)
+- [x] `uv lock --upgrade-package pointblank` → pointblank 1.2.0, great-tables 1.1.0; 160 passed, coverage 87.26%; bundled schemas pass `--validate`
+- [x] Same seed: output is stable across runs on 1.2.0 but differs from 1.1.1, by design (pointblank #526, one random sequence per column)
+- [x] `pyproject.toml`: `pointblank>=1.2.0`, so the same seed no longer depends on which supported pointblank is installed

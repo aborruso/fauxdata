@@ -1,5 +1,18 @@
 # Log
 
+## 2026-11-08 — pointblank 1.2.0
+
+- `uv.lock`: pointblank 1.2.0, great-tables 1.1.0. Minimo in `pyproject.toml` portato a `>=1.2.0`, così lo stesso seed non dipende dalla versione installata. Sito: badge `pointblank 1.2+`. 160/160 test.
+- A parità di seed i dati cambiano rispetto alla 1.1.1: ogni colonna ha ora la sua sequenza casuale (pointblank #526). Sulla 1.2.0 l'output resta identico tra esecuzioni.
+- Segnalato a monte il difetto dei preset assegnati dal nome: posit-dev/pointblank#539.
+
+## 2026-11-08 — `infer`: preset da nome su colonne categoriche
+
+- Fix: pointblank assegna preset come `state` dal solo nome e salta il rilevamento categorico, quindi `region` con nord/centro/sud generava stati americani. Ora `state`, `city`, `country`, `country_code_2`, `currency_code`, `company` e `job` con pochi valori non unici tornano a `values:`. I preset personali restano preset, per non copiare dati di persone nello schema.
+- README: `infer` non conserva correlazioni, regole tra colonne e frequenze delle categorie.
+- `docs/future-ideas.md`: idee da SDV 2.2.0, valutato come ispirazione e non come dipendenza (BUSL-1.1, 1,2 GB).
+- 160/160 test, coverage 87,26%. Nessuna release.
+
 ## 2026-10-17 — 0.2.1: pointblank 1.1.0
 
 - Rilasciata: tag `v0.2.1`, PyPI (`fauxdata-cli` 0.2.1, verificato con `uvx`), GitHub Release.
