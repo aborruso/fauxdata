@@ -3,6 +3,7 @@
 ## 2026-11-08 — Sito: tabella DuckDB nel terminale
 
 - `docs/index.html`: la tabella dell'esempio pipeline era disallineata perché `white-space: nowrap` comprimeva gli spazi. Nuova classe `t-table` con `white-space: pre` e interlinea ridotta. Verificata nel browser a 1200 e 375 px.
+- Su Windows i bordi restavano disallineati: i caratteri `┌─│` arrivano da un font di riserva con larghezza diversa. La tabella ora è HTML con bordi CSS, indipendente dal font. Verificata su Windows.
 
 ## 2026-11-08 — `tasks/todo.md` fuori da git
 
