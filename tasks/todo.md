@@ -129,3 +129,9 @@ Unresolved: `product_name` still matches the personal `name` preset (kept on pur
 - [x] `uv lock --upgrade-package pointblank` → pointblank 1.2.0, great-tables 1.1.0; 160 passed, coverage 87.26%; bundled schemas pass `--validate`
 - [x] Same seed: output is stable across runs on 1.2.0 but differs from 1.1.1, by design (pointblank #526, one random sequence per column)
 - [x] `pyproject.toml`: `pointblank>=1.2.0`, so the same seed no longer depends on which supported pointblank is installed
+
+## Phase 9 - Release 0.2.2 (2026-11-08)
+
+- [x] Version 0.2.2 in `pyproject.toml`, `__init__.py`, `uv.lock`; LOG entry
+- [x] doc-sync review: seed claim on the website and `--seed` in the README now mention the pointblank version
+- [ ] Tag `v0.2.2`, PyPI, GitHub Release (see `RELEASING.md`)

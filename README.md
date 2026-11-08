@@ -245,7 +245,7 @@ fauxdata generate schemas/people.yml --out - --format jsonl | wc -l
 | `--rows` | `-r` | from schema | Number of rows to generate |
 | `--out` | `-o` | from schema | Output path — use `-` for stdout |
 | `--format` | `-f` | from schema | Output format: `csv`, `parquet`, `json`, `jsonl`, `jsonlines` |
-| `--seed` | `-s` | from schema | Random seed for reproducibility |
+| `--seed` | `-s` | from schema | Random seed for reproducibility: same seed, same data, on the same pointblank version |
 | `--validate` | `-v` | off | Run validation rules after generating |
 | `--json` | | off | Print only a JSON summary to stdout (see [Using fauxdata with AI agents](#using-fauxdata-with-ai-agents)) |
 

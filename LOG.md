@@ -1,5 +1,10 @@
 # Log
 
+## 2026-11-08 — 0.2.2: fix `infer`, pointblank 1.2.0
+
+- Versione `0.2.2` (patch): colonne categoriche con preset assegnato dal nome (`region`, `city`, ...) e minimo `pointblank>=1.2.0`, vedi voci sotto.
+- Cambio di comportamento: a parità di seed i dati sono diversi da quelli delle versioni precedenti.
+
 ## 2026-11-08 — pointblank 1.2.0
 
 - `uv.lock`: pointblank 1.2.0, great-tables 1.1.0. Minimo in `pyproject.toml` portato a `>=1.2.0`, così lo stesso seed non dipende dalla versione installata. Sito: badge `pointblank 1.2+`. 160/160 test.
@@ -11,7 +16,7 @@
 - Fix: pointblank assegna preset come `state` dal solo nome e salta il rilevamento categorico, quindi `region` con nord/centro/sud generava stati americani. Ora `state`, `city`, `country`, `country_code_2`, `currency_code`, `company` e `job` con pochi valori non unici tornano a `values:`. I preset personali restano preset, per non copiare dati di persone nello schema.
 - README: `infer` non conserva correlazioni, regole tra colonne e frequenze delle categorie.
 - `docs/future-ideas.md`: idee da SDV 2.2.0, valutato come ispirazione e non come dipendenza (BUSL-1.1, 1,2 GB).
-- 160/160 test, coverage 87,26%. Nessuna release.
+- 160/160 test, coverage 87,26%. Nessuna release (poi 0.2.2, vedi sopra).
 
 ## 2026-10-17 — 0.2.1: pointblank 1.1.0
 
