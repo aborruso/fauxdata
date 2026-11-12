@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pointblank as pb
 import polars as pl
+import polars.selectors as cs
 import typer
 import yaml
 
@@ -30,11 +31,6 @@ _DTYPE_MAP = {
     "Datetime": "datetime",
     "Date": "date",
 }
-
-# Presets pointblank matches on the column name alone, skipping categorical detection.
-# Personal presets (name, phone, address...) are left out on purpose: restoring their
-# source values would copy real people's data into the schema.
-_CATEGORICAL_PRESETS = {"state", "city", "country", "country_code_2", "currency_code", "company", "job"}
 
 
 def _col_type_from_dtype(dtype: str) -> str:
@@ -85,19 +81,6 @@ def _field_to_spec(field) -> dict:
         if attrs.get("max_length") is not None:
             spec["max_length"] = attrs["max_length"]
 
-    return spec
-
-
-def _restore_categorical(spec: dict, series: pl.Series, threshold: int | float) -> dict:
-    """Replace a name-matched preset with the source values on a low-cardinality column."""
-    if spec.get("preset") not in _CATEGORICAL_PRESETS or spec.get("unique"):
-        return spec
-    limit = threshold if isinstance(threshold, int) else int(threshold * series.len())
-    values = series.drop_nulls().unique().sort().to_list()
-    if len(values) > limit:
-        return spec
-    del spec["preset"]
-    spec["values"] = values
     return spec
 
 
@@ -178,18 +161,17 @@ def run(
     if not json_out:
         rprint(f"  Loaded [bold]{len(df)}[/bold] rows, [bold]{len(df.columns)}[/bold] columns")
 
-    threshold = _threshold(categorical_threshold)
+    # NaN is missing for pointblank's null checks (>= 1.3.0) but not for schema_from_tbl()
+    df = df.with_columns(cs.float().fill_nan(None))
+
     pb_schema = pb.schema_from_tbl(
         df,
-        categorical_threshold=threshold,
+        categorical_threshold=_threshold(categorical_threshold),
         detect_presets=detect_presets,
         sample_size=sample_size,
     )
 
-    columns = [
-        (col_name, _restore_categorical(_field_to_spec(field), df[col_name], threshold))
-        for col_name, field in pb_schema.columns
-    ]
+    columns = [(col_name, _field_to_spec(field)) for col_name, field in pb_schema.columns]
 
     schema_name = name or Path(dataset_path).stem
     out_rows = rows if rows is not None else len(df)

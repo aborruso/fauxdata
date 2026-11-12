@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-12 — pointblank 1.3.0, `NaN` in `infer`
+
+- `pointblank>=1.3.0` (lock 1.3.0). Contiene la correzione della issue #539, quindi tolto `_restore_categorical` da `infer`: stessi risultati, verificato con i test e con una copia senza correzione (9 test falliscono sulla 1.2.0, passano sulla 1.3.0).
+- Da pointblank 1.3.0 i controlli sui nulli contano i `NaN` come mancanti, `schema_from_tbl()` no: un file con `NaN` falliva la validazione con lo schema ricavato da sé stesso. `infer` ora tratta i `NaN` delle colonne decimali come mancanti. Nuovo test. Segnalato a monte: posit-dev/pointblank#561.
+- Stesso seed: schemi d'esempio identici byte per byte tra 1.2.0 e 1.3.0. 161/161 test, coverage 87,22%. Nessuna release.
+
 ## 2026-11-08 — Sito: tabella DuckDB nel terminale
 
 - `docs/index.html`: la tabella dell'esempio pipeline era disallineata perché `white-space: nowrap` comprimeva gli spazi. Nuova classe `t-table` con `white-space: pre` e interlinea ridotta. Verificata nel browser a 1200 e 375 px.

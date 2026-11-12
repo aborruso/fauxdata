@@ -287,3 +287,19 @@ def test_infer_categorical_with_nulls_keeps_nullable(tmp_path):
     loaded = load_schema(out)
     all_passed, results = validate_dataset(generate_dataset(loaded, rows=200, seed=1), loaded)
     assert all_passed, [r for r in results if not r["ok"]]
+
+
+def test_infer_nan_counts_as_missing(tmp_path):
+    """NaN in a float column is missing, as in pointblank's null checks (>= 1.3.0)."""
+    src = tmp_path / "real.parquet"
+    pl.DataFrame({"score": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, float("nan"), float("nan")]}).write_parquet(src)
+    out = tmp_path / "inferred.yml"
+    infer_mod.run(dataset_path=str(src), out=str(out))
+    spec = yaml.safe_load(out.read_text())["columns"]["score"]
+    assert spec["nullable"] is True
+    assert spec["null_probability"] == 0.2
+    assert (spec["min"], spec["max"]) == (1.0, 8.0)
+
+    schema = load_schema(out)
+    all_passed, results = validate_dataset(pl.read_parquet(src), schema)
+    assert all_passed, [r for r in results if not r["ok"]]
