@@ -2,6 +2,7 @@
 
 ## 2026-11-12 — 0.2.3: pointblank 1.3.0, `NaN` in `infer`
 
+- Rilasciata: tag `v0.2.3`, PyPI (`fauxdata-cli` 0.2.3, verificato con `uvx`), GitHub Release.
 - Versione `0.2.3` (patch): `pointblank>=1.3.0`, `NaN` contati come mancanti in `infer`, vedi voce sotto.
 - Cambio di comportamento: `validate` conta i `NaN` come mancanti in `col_vals_not_null`. Con lo stesso seed i dati non cambiano rispetto alla 0.2.2.
 
