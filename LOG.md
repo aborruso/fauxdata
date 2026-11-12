@@ -1,10 +1,15 @@
 # Log
 
+## 2026-11-12 — 0.2.3: pointblank 1.3.0, `NaN` in `infer`
+
+- Versione `0.2.3` (patch): `pointblank>=1.3.0`, `NaN` contati come mancanti in `infer`, vedi voce sotto.
+- Cambio di comportamento: `validate` conta i `NaN` come mancanti in `col_vals_not_null`. Con lo stesso seed i dati non cambiano rispetto alla 0.2.2.
+
 ## 2026-11-12 — pointblank 1.3.0, `NaN` in `infer`
 
 - `pointblank>=1.3.0` (lock 1.3.0). Contiene la correzione della issue #539, quindi tolto `_restore_categorical` da `infer`: stessi risultati, verificato con i test e con una copia senza correzione (9 test falliscono sulla 1.2.0, passano sulla 1.3.0).
 - Da pointblank 1.3.0 i controlli sui nulli contano i `NaN` come mancanti, `schema_from_tbl()` no: un file con `NaN` falliva la validazione con lo schema ricavato da sé stesso. `infer` ora tratta i `NaN` delle colonne decimali come mancanti. Nuovo test. Segnalato a monte: posit-dev/pointblank#561.
-- Stesso seed: schemi d'esempio identici byte per byte tra 1.2.0 e 1.3.0. 161/161 test, coverage 87,22%. Nessuna release.
+- Stesso seed: schemi d'esempio identici byte per byte tra 1.2.0 e 1.3.0. 161/161 test, coverage 87,22%. Nessuna release (poi 0.2.3, vedi sopra).
 
 ## 2026-11-08 — Sito: tabella DuckDB nel terminale
 

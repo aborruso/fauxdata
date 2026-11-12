@@ -21,7 +21,7 @@ TYPE_OPTIONS = {
 }
 
 RULE_PARAMS = {
-    "col_vals_not_null": ("`columns`", "no nulls"),
+    "col_vals_not_null": ("`columns`", "no nulls (NaN counts as null)"),
     "col_vals_between": ("`column`, `min`, `max`", "value in range"),
     "col_vals_gt": ("`column`, `min`", "value > min"),
     "col_vals_lt": ("`column`, `max`", "value < max"),

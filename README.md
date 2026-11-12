@@ -216,7 +216,7 @@ Supported locales include: `US`, `IT`, `DE`, `FR`, `ES`, `JP`, `BR`, `PL`, `NL`,
 
 | Rule | Description | Parameters |
 |------|-------------|------------|
-| `col_vals_not_null` | No nulls | `columns` |
+| `col_vals_not_null` | No nulls (`NaN` counts as null) | `columns` |
 | `col_vals_between` | Value in range | `column`, `min`, `max` |
 | `col_vals_regex` | Matches pattern | `column`, `pattern` |
 | `col_vals_in_set` | Value in allowed set | `column`, `values` |
